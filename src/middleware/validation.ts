@@ -20,3 +20,17 @@ export const validateMyUserRequest = [
     handleValidationErrors,
 ];
 
+export const validateMyRestaurantRequest = [
+
+    body("restaurantName").notEmpty().withMessage("Restaurant name required"),
+    body("city").notEmpty().withMessage("City name required"),
+    body("country").notEmpty().withMessage("Country name required"),
+    body("deliveryPrice").isFloat().withMessage("Delivery price must be a positive number"),
+    body("estimatedDeliveryTime").isInt({min: 0}).withMessage("Estimated delivery time must be a positive integer"),
+    body("cuisines").isArray().withMessage("Cuisines must be an array")
+    .not().isEmpty().withMessage("Cuisines array cannot be empty"),
+    body("menuItems").isArray().withMessage("Menu Items must be an array"),
+    body("MenuItems.*.name").notEmpty().withMessage("Menu item is required"),
+    body("MenuItems.*.price").isFloat({min: 0}).withMessage("Menu item is required and Price must be a positive number"),
+    handleValidationErrors,
+];

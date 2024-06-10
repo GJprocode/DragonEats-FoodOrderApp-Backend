@@ -54,4 +54,3 @@ export const jwtParse =async(
       return res.sendStatus(401);
     }
 };
-
