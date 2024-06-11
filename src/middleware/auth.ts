@@ -28,7 +28,6 @@ export const jwtParse =async(
 ) => {
   const { authorization } = req.headers;
 
-  // Bearer efhafa0bfhdfjfghdgfj\dfg\hd must have space after it
 
     if(!authorization || !authorization.startsWith("Bearer ")){
       return  res.sendStatus(401);
