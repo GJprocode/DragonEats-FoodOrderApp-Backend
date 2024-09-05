@@ -1,0 +1,205 @@
+{
+  ".hintrc": "file",
+  ".vscode": {
+    "settings.json": "file"
+  },
+  "backend": {
+    ".env": "file",
+    ".gitignore": "file",
+    "package-lock.json": "file",
+    "package.json": "file",
+    "README.md": "file",
+    "src": {
+      "controllers": {
+        "AdminController.ts": "file",
+        "MyRestaurantController.ts": "file",
+        "MyUserController.ts": "file",
+        "RestaurantController.ts": "file"
+      },
+      "index.ts": "file",
+      "middleware": {
+        "auth.ts": "file",
+        "validation.ts": "file"
+      },
+      "models": {
+        "admin.ts": "file",
+        "adminpanelactions.ts": "file",
+        "restaurant.ts": "file",
+        "user.ts": "file"
+      },
+      "routes": {
+        "adminRoutes.ts": "file",
+        "cityRoutes.ts": "file",
+        "MyRestaurantRoute.ts": "file",
+        "MyUserRoute.ts": "file",
+        "RestaurantRoute.ts": "file"
+      },
+      "types": {
+        "clamav.js.d.ts": "file",
+        "express.d.ts": "file",
+        "leo-profanity.d.ts": "file"
+      },
+      "utils": {
+        "cloudinaryMongoDBImageClean.ts": "file",
+        "finalCloudinaryImages.json": "file",
+        "finalMongoDBImages.json": "file",
+        "imageModerator.ts": "file",
+        "printStructure.ts": "file",
+        "textFilter.ts": "file",
+        "whitelistadd.ts": "file"
+      }
+    },
+    "tsconfig.json": "file"
+  },
+  "frontend": {
+    ".env": "file",
+    ".eslintrc.cjs": "file",
+    ".gitignore": "file",
+    "components.json": "file",
+    "index.html": "file",
+    "package-lock.json": "file",
+    "package.json": "file",
+    "postcss.config.js": "file",
+    "public": {
+      "dragon.svg": "file",
+      "react.svg": "file",
+      "vite.svg": "file"
+    },
+    "README.md": "file",
+    "src": {
+      "api": {
+        "MyRestaurantApi.tsx": "file",
+        "MyUserApi.tsx": "file",
+        "RestaurantApi.tsx": "file"
+      },
+      "AppRoutes.tsx": "file",
+      "assets": {
+        "AppleStore.png": "file",
+        "CellApp.png": "file",
+        "food.png": "file",
+        "GooglePlay.png": "file"
+      },
+      "auth": {
+        "Auth0ProviderWithNavigate.tsx": "file",
+        "ProtectedRoute.tsx": "file"
+      },
+      "components": {
+        "CuisineFilter.tsx": "file",
+        "Footer.tsx": "file",
+        "header.tsx": "file",
+        "LoadingButton.tsx": "file",
+        "MainNav.tsx": "file",
+        "MainPic.tsx": "file",
+        "MenuItem.tsx": "file",
+        "MobileNav.tsx": "file",
+        "MobileNavLinks.tsx": "file",
+        "OrderSummary.tsx": "file",
+        "PaginationSelector.tsx": "file",
+        "RestaurantDetails.tsx": "file",
+        "RestaurantInfo.tsx": "file",
+        "SearchBar.tsx": "file",
+        "SearchResultCard.tsx": "file",
+        "SearchResultInfo.tsx": "file",
+        "SortOptionDropdown.tsx": "file",
+        "ui": {
+          "aspect-ratio.tsx": "file",
+          "badge.tsx": "file",
+          "button.tsx": "file",
+          "card.tsx": "file",
+          "checkbox.tsx": "file",
+          "dropdown-menu.tsx": "file",
+          "form.tsx": "file",
+          "input.tsx": "file",
+          "label.tsx": "file",
+          "pagination.tsx": "file",
+          "separator.tsx": "file",
+          "sheet.tsx": "file",
+          "sonner.tsx": "file",
+          "UsernameMenu.tsx": "file"
+        }
+      },
+      "config": {
+        "restaurant-options-config.tsx": "file"
+      },
+      "custom.d.ts": "file",
+      "forms": {
+        "manage-restaurant-form": {
+          "CuisineCheckbox.tsx": "file",
+          "CuisinesSection.tsx": "file",
+          "DetailsSection.tsx": "file",
+          "ManageRestaurantForm.tsx": "file",
+          "MenuItemInput.tsx": "file",
+          "MenuSection.tsx": "file",
+          "RestaurantImage.tsx": "file"
+        },
+        "user-profile-form": {
+          "UserProfileForm.tsx": "file"
+        }
+      },
+      "global.css": "file",
+      "layouts": {
+        "layout.tsx": "file"
+      },
+      "lib": {
+        "utils.ts": "file"
+      },
+      "main.tsx": "file",
+      "pages": {
+        "AdminPanel.tsx": "file",
+        "AuthCallbackPage.tsx": "file",
+        "DetailPage.tsx": "file",
+        "HomePage.tsx": "file",
+        "ManageRestaurantPage.tsx": "file",
+        "PrivacyPolicy.tsx": "file",
+        "SearchPage.tsx": "file",
+        "TermsOfService.tsx": "file",
+        "UserProfilePage.tsx": "file"
+      },
+      "src": {
+        "controllers": {
+          "AdminController.ts": "file",
+          "MyRestaurantController.ts": "file",
+          "MyUserController.ts": "file",
+          "RestaurantController.ts": "file"
+        },
+        "index.ts": "file",
+        "middleware": {
+          "auth.ts": "file",
+          "validation.ts": "file"
+        },
+        "models": {
+          "admin.ts": "file",
+          "adminpanelactions.ts": "file",
+          "restaurant.ts": "file",
+          "user.ts": "file"
+        },
+        "routes": {
+          "adminRoutes.ts": "file",
+          "cityRoutes.ts": "file",
+          "MyRestaurantRoute.ts": "file",
+          "MyUserRoute.ts": "file",
+          "RestaurantRoute.ts": "file"
+        },
+        "types": {
+          "clamav.js.d.ts": "file",
+          "express.d.ts": "file",
+          "leo-profanity.d.ts": "file"
+        },
+        "utils": {
+          "cloudinaryMongoDBImageClean.ts": "file",
+          "finalCloudinaryImages.json": "file",
+          "finalMongoDBImages.json": "file",
+          "imageModerator.ts": "file",
+          "textFilter.ts": "file",
+          "whitelistadd.ts": "file"
+        }
+      },
+      "types.ts": "file",
+      "vite-env.d.ts": "file"
+    },
+    "tailwind.config.js": "file",
+    "tsconfig.json": "file",
+    "tsconfig.node.json": "file",
+    "vite.config.ts": "file"
+  }
+}
