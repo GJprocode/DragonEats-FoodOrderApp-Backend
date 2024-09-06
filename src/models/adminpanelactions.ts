@@ -1,27 +1,21 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-interface IAdminPanelAction extends Document {
-  restaurantId: string;
-  actionType: string;
-  status: string;
-  contractType?: string;
-  contractId?: string;
+interface AdminAction extends Document {
+  restaurantId: mongoose.Types.ObjectId;
   adminEmail: string;
-  createdAt: Date;
+  status: string;
+  contractType: string;
+  contractId: string;
   updatedAt: Date;
 }
 
-const AdminPanelActionSchema: Schema = new Schema({
-  restaurantId: { type: String, required: true },
-  actionType: { type: String, required: true },
+const AdminActionSchema: Schema = new Schema({
+  restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
+  adminEmail: { type: String, required: true },
   status: { type: String, required: true },
   contractType: { type: String },
   contractId: { type: String },
-  adminEmail: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-const AdminPanelAction = mongoose.model<IAdminPanelAction>('AdminPanelAction', AdminPanelActionSchema);
-
-export default AdminPanelAction;
+export default mongoose.model<AdminAction>("AdminAction", AdminActionSchema);

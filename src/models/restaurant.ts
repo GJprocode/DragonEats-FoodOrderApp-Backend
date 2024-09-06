@@ -17,9 +17,9 @@ interface Restaurant extends Document {
   contractType?: string;
   contractId?: string;
   lastUpdated?: Date;
-  user: mongoose.Types.ObjectId; // This links the restaurant to the user
+  user: mongoose.Types.ObjectId; // Ensure this is always an ObjectId
   wholesale?: boolean;
-  email: string; // Ensure email field is always present
+  email: string;
 }
 
 const RestaurantSchema: Schema = new Schema({
@@ -41,10 +41,9 @@ const RestaurantSchema: Schema = new Schema({
   contractType: { type: String },
   contractId: { type: String },
   lastUpdated: { type: Date, default: Date.now },
-  user: { type: mongoose.Types.ObjectId, ref: 'User', required: true }, // Reference to the user
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // ObjectId reference to User
   wholesale: { type: Boolean, default: false },
-  email: { type: String, default: "" }, // Default email field to an empty string
+  email: { type: String, default: "" },
 });
 
 export default mongoose.model<Restaurant>("Restaurant", RestaurantSchema);
-  

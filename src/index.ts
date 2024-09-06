@@ -1,15 +1,14 @@
-// src/index.ts
-
 import express, { Request, Response } from "express";
 import cors from "cors";
-import "dotenv/config";
+import "dotenv/config"; // Ensure .env is loaded
 import mongoose from "mongoose";
 import myUserRoute from "./routes/MyUserRoute";
 import { v2 as cloudinary } from "cloudinary";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
 import restaurantRoute from "./routes/RestaurantRoute";
-import cityRoutes from './routes/cityRoutes'; // Adjust the path as necessary
-import adminRoutes from "./routes/adminRoutes"; // Adjust the path as needed
+import cityRoutes from './routes/cityRoutes';
+import adminRoutes from "./routes/adminRoutes"; 
+import adminActionRoutes from "./routes/adminActionsRoutes";  // Import admin routes
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING as string)
@@ -33,8 +32,9 @@ app.get("/health", async (req: Request, res: Response) => {
 app.use("/api/my/user", myUserRoute);
 app.use("/api/my/restaurant", MyRestaurantRoute);
 app.use("/api/restaurant", restaurantRoute);
-app.use(cityRoutes); // check where is the path, it works
-app.use( adminRoutes); // check
+app.use(cityRoutes);
+app.use(adminRoutes);
+// app.use(actionadmin); where is this implimnetations?
 
 app.listen(7000, () => {
   console.log("Server started on http://localhost:7000");

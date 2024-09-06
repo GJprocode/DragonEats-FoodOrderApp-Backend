@@ -11,6 +11,7 @@
     "README.md": "file",
     "src": {
       "controllers": {
+        "AdminActionsController.ts": "file",
         "AdminController.ts": "file",
         "MyRestaurantController.ts": "file",
         "MyUserController.ts": "file",
@@ -28,6 +29,7 @@
         "user.ts": "file"
       },
       "routes": {
+        "adminActionsRoutes.ts": "file",
         "adminRoutes.ts": "file",
         "cityRoutes.ts": "file",
         "MyRestaurantRoute.ts": "file",
@@ -43,6 +45,7 @@
         "cloudinaryMongoDBImageClean.ts": "file",
         "finalCloudinaryImages.json": "file",
         "finalMongoDBImages.json": "file",
+        "foodAppStructure.json": "file",
         "imageModerator.ts": "file",
         "printStructure.ts": "file",
         "textFilter.ts": "file",
@@ -68,6 +71,7 @@
     "README.md": "file",
     "src": {
       "api": {
+        "AdminPanelApi.tsx": "file",
         "MyRestaurantApi.tsx": "file",
         "MyUserApi.tsx": "file",
         "RestaurantApi.tsx": "file"
@@ -123,6 +127,9 @@
       },
       "custom.d.ts": "file",
       "forms": {
+        "admin-action-form": {
+          "AdminActionForm.tsx": "file"
+        },
         "manage-restaurant-form": {
           "CuisineCheckbox.tsx": "file",
           "CuisinesSection.tsx": "file",
@@ -154,45 +161,6 @@
         "SearchPage.tsx": "file",
         "TermsOfService.tsx": "file",
         "UserProfilePage.tsx": "file"
-      },
-      "src": {
-        "controllers": {
-          "AdminController.ts": "file",
-          "MyRestaurantController.ts": "file",
-          "MyUserController.ts": "file",
-          "RestaurantController.ts": "file"
-        },
-        "index.ts": "file",
-        "middleware": {
-          "auth.ts": "file",
-          "validation.ts": "file"
-        },
-        "models": {
-          "admin.ts": "file",
-          "adminpanelactions.ts": "file",
-          "restaurant.ts": "file",
-          "user.ts": "file"
-        },
-        "routes": {
-          "adminRoutes.ts": "file",
-          "cityRoutes.ts": "file",
-          "MyRestaurantRoute.ts": "file",
-          "MyUserRoute.ts": "file",
-          "RestaurantRoute.ts": "file"
-        },
-        "types": {
-          "clamav.js.d.ts": "file",
-          "express.d.ts": "file",
-          "leo-profanity.d.ts": "file"
-        },
-        "utils": {
-          "cloudinaryMongoDBImageClean.ts": "file",
-          "finalCloudinaryImages.json": "file",
-          "finalMongoDBImages.json": "file",
-          "imageModerator.ts": "file",
-          "textFilter.ts": "file",
-          "whitelistadd.ts": "file"
-        }
       },
       "types.ts": "file",
       "vite-env.d.ts": "file"

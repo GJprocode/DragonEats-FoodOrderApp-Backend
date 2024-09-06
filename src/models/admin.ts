@@ -1,21 +1,13 @@
-import mongoose, { Schema, Document } from "mongoose";
-// add role: admins, also frontend types.ts for collections admins to be in sync with admin.ts model 
-interface AdminAction extends Document {
-  restaurantId: mongoose.Types.ObjectId;
-  adminEmail: string;
-  status: string;
-  contractType: string;
-  contractId: string;
-  updatedAt: Date;
+import mongoose, { Schema, Document } from 'mongoose';
+
+interface Admin extends Document {
+  email: string;
+  role: string; // Ensure role is added here
 }
 
-const AdminActionSchema: Schema = new Schema({
-  restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
-  adminEmail: { type: String, required: true },
-  status: { type: String, required: true },
-  contractType: { type: String },
-  contractId: { type: String },
-  updatedAt: { type: Date, default: Date.now },
+const AdminSchema: Schema = new Schema({
+  email: { type: String, required: true, unique: true },
+  role: { type: String, required: true, default: 'admin' }, // Ensure role is added here
 });
 
-export default mongoose.model<AdminAction>("AdminAction", AdminActionSchema);
+export default mongoose.model<Admin>('Admin', AdminSchema);
