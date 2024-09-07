@@ -1,4 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+// C:\Users\gertf\Desktop\FoodApp\backend\src\models\restaurant.ts
+
+import mongoose, { Schema, Document } from "mongoose";
 
 interface Restaurant extends Document {
   restaurantName: string;
@@ -17,7 +19,7 @@ interface Restaurant extends Document {
   contractType?: string;
   contractId?: string;
   lastUpdated?: Date;
-  user: mongoose.Types.ObjectId; // Ensure this is always an ObjectId
+  user: mongoose.Types.ObjectId;
   wholesale?: boolean;
   email: string;
 }
@@ -41,7 +43,7 @@ const RestaurantSchema: Schema = new Schema({
   contractType: { type: String },
   contractId: { type: String },
   lastUpdated: { type: Date, default: Date.now },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // ObjectId reference to User
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   wholesale: { type: Boolean, default: false },
   email: { type: String, default: "" },
 });

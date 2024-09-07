@@ -1,14 +1,15 @@
+// src/index.ts
 import express, { Request, Response } from "express";
 import cors from "cors";
-import "dotenv/config"; // Ensure .env is loaded
+import "dotenv/config";
 import mongoose from "mongoose";
 import myUserRoute from "./routes/MyUserRoute";
 import { v2 as cloudinary } from "cloudinary";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
 import restaurantRoute from "./routes/RestaurantRoute";
 import cityRoutes from './routes/cityRoutes';
-import adminRoutes from "./routes/adminRoutes"; 
-import adminActionRoutes from "./routes/adminActionsRoutes";  // Import admin routes
+import adminRoutes from "./routes/adminRoutes";
+import adminActionsRoutes from "./routes/adminActionsRoutes";
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING as string)
@@ -34,7 +35,7 @@ app.use("/api/my/restaurant", MyRestaurantRoute);
 app.use("/api/restaurant", restaurantRoute);
 app.use(cityRoutes);
 app.use(adminRoutes);
-// app.use(actionadmin); where is this implimnetations?
+app.use(adminActionsRoutes);
 
 app.listen(7000, () => {
   console.log("Server started on http://localhost:7000");

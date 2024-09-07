@@ -1,9 +1,9 @@
-// types/express.d.ts or similar
+// C:\Users\gertf\Desktop\FoodApp\backend\src\types\express.d.ts
 
 import { Request } from "express";
 
 declare module "express" {
   export interface Request {
-    userId?: string; // Modify this if you use another field like `user`
+    user?: { email: string; id: string };  // This must match the shape you're using
   }
 }

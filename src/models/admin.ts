@@ -1,13 +1,26 @@
-import mongoose, { Schema, Document } from 'mongoose';
+// src/models/admin.ts
+import mongoose, { Schema, Document } from "mongoose";
 
 interface Admin extends Document {
   email: string;
-  role: string; // Ensure role is added here
+  auth0Id: string;
+  city: string;
+  country: string;
+  name: string;
+  address: string;
+  permissions: string[];
+  role: string;
 }
 
 const AdminSchema: Schema = new Schema({
   email: { type: String, required: true, unique: true },
-  role: { type: String, required: true, default: 'admin' }, // Ensure role is added here
+  auth0Id: { type: String, required: true },
+  city: { type: String },
+  country: { type: String },
+  name: { type: String },
+  address: { type: String },
+  permissions: [{ type: String }],
+  role: { type: String, required: true, default: "admin" },
 });
 
-export default mongoose.model<Admin>('Admin', AdminSchema);
+export default mongoose.model<Admin>("Admin", AdminSchema);

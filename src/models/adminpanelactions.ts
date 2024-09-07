@@ -1,3 +1,5 @@
+// C:\Users\gertf\Desktop\FoodApp\backend\src\models\adminpanelactions.ts
+
 import mongoose, { Schema, Document } from 'mongoose';
 
 interface AdminAction extends Document {
@@ -10,7 +12,7 @@ interface AdminAction extends Document {
 }
 
 const AdminActionSchema: Schema = new Schema({
-  restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
+  restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true }, // Ensure this is ObjectId
   adminEmail: { type: String, required: true },
   status: { type: String, required: true },
   contractType: { type: String },

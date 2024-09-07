@@ -54,13 +54,16 @@
 
 // // Only export the variables once
 // export { jwtCheck, jwtParse };
+
 // backend/src/middleware/auth.ts
 
+// src/middleware/auth.ts
 import { Request, Response, NextFunction } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
 import jwt from "jsonwebtoken";
 import User from "../models/user";
 
+// Extend the Express Request interface to include the custom fields
 declare global {
   namespace Express {
     interface Request {
@@ -84,6 +87,7 @@ export const jwtParse = async (req: Request, res: Response, next: NextFunction) 
   }
 
   const token = authorization.split(" ")[1];
+
   try {
     const decoded = jwt.decode(token) as jwt.JwtPayload;
     const user = await User.findOne({ auth0Id: decoded.sub });
