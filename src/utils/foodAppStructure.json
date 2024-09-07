@@ -115,6 +115,7 @@
           "form.tsx": "file",
           "input.tsx": "file",
           "label.tsx": "file",
+          "LoadingSpinner.tsx": "file",
           "pagination.tsx": "file",
           "separator.tsx": "file",
           "sheet.tsx": "file",
@@ -152,7 +153,7 @@
       },
       "main.tsx": "file",
       "pages": {
-        "AdminPanel.tsx": "file",
+        "AdminPanelPage.tsx": "file",
         "AuthCallbackPage.tsx": "file",
         "DetailPage.tsx": "file",
         "HomePage.tsx": "file",
