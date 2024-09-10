@@ -88,6 +88,7 @@
         "ProtectedRoute.tsx": "file"
       },
       "components": {
+        "BusinessTypeFilter.tsx": "file",
         "CuisineFilter.tsx": "file",
         "Footer.tsx": "file",
         "header.tsx": "file",

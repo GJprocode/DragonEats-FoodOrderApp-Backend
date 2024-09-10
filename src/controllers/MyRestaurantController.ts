@@ -1,7 +1,8 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\MyRestaurantController.ts
-// This controller handles the logic for creating, updating, 
-// and retrieving restaurant data,
-// including image uploads and handling menu items.
+// // C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\MyRestaurantController.ts
+// // This controller handles the logic for creating, updating, 
+// // and retrieving restaurant data,
+// // including image uploads and handling menu items.
+
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 import mongoose from "mongoose";
@@ -26,7 +27,6 @@ const uploadImage = async (file: Express.Multer.File): Promise<string> => {
   }
 };
 
-// Get all restaurants for the logged-in user
 export const getAllRestaurants = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurants = await Restaurant.find().exec();
@@ -42,14 +42,10 @@ export const getAllRestaurants = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Get restaurant details by the logged-in user
-// Example of using `userId` in the controller
-// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\MyRestaurantController.ts
-
 export const getMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.userId; // Use req.userId set by jwtParse middleware
-    
+    const userId = req.userId;
+
     if (!userId) {
       res.status(400).json({ message: "User ID not provided" });
       return;
@@ -68,7 +64,7 @@ export const getMyRestaurant = async (req: Request, res: Response): Promise<void
         menuItems: [],
         restaurantImageUrl: "",
         user: userId,
-        email: req.userEmail || "", // Use req.userEmail for email
+        email: req.userEmail || "",
         status: "pending",
         contractType: "",
         contractId: "",
@@ -84,9 +80,6 @@ export const getMyRestaurant = async (req: Request, res: Response): Promise<void
   }
 };
 
-
-// Create a new restaurant
-// Create a new restaurant
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
     const existingRestaurant = await Restaurant.findOne({ user: req.userId }).exec();
@@ -104,7 +97,7 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
     const restaurant = new Restaurant({
       ...req.body,
       user: new mongoose.Types.ObjectId(req.userId),
-      email: user.email || "", // Save user's email
+      email: user.email || "",
       lastUpdated: new Date(),
     });
 
@@ -152,8 +145,6 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
   }
 };
 
-
-// Update an existing restaurant
 export const updateMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurant = await Restaurant.findOne({ user: req.userId }).exec();
@@ -175,20 +166,18 @@ export const updateMyRestaurant = async (req: Request, res: Response): Promise<v
     restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
     restaurant.cuisines = req.body.cuisines;
     restaurant.wholesale = req.body.wholesale;
-    restaurant.email = user.email || ""; // Update email field
+    restaurant.email = user.email || "";
     restaurant.lastUpdated = new Date();
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-    // Handle restaurant image update
     if (files?.restaurantImageFile) {
       const fileBuffer = files.restaurantImageFile[0].buffer;
       await checkImageForInappropriateContent(fileBuffer);
       restaurant.restaurantImageUrl = await uploadImage(files.restaurantImageFile[0]);
     }
 
-    // Handle menu items update
-    restaurant.menuItems = []; // Clear the existing menuItems to update with the new ones
+    restaurant.menuItems = [];
     if (files) {
       for (let i = 0; i < req.body.menuItems.length; i++) {
         const field = `menuItems[${i}].menuItemImageFile`;
@@ -221,7 +210,6 @@ export const updateMyRestaurant = async (req: Request, res: Response): Promise<v
   }
 };
 
-// Update the status of a restaurant
 export const updateRestaurantStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurantId = req.params.id;
@@ -250,4 +238,3 @@ export const updateRestaurantStatus = async (req: Request, res: Response): Promi
     }
   }
 };
-
