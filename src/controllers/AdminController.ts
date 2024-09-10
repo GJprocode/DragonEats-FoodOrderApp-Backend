@@ -1,3 +1,5 @@
+// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\AdminController.ts
+
 import { Request, Response } from "express";
 import Admin from "../models/admin";
 

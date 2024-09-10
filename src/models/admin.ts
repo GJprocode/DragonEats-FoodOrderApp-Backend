@@ -1,4 +1,4 @@
-// src/models/admin.ts
+// C:\Users\gertf\Desktop\FoodApp\backend\src\models\admin.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 interface Admin extends Document {

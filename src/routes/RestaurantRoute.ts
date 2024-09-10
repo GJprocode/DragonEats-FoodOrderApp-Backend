@@ -1,4 +1,4 @@
-// src/routes/RestaurantRoute.ts
+// C:\Users\gertf\Desktop\FoodApp\backend\src\routes\RestaurantRoute.ts
 
 import express from "express";
 import { param } from "express-validator";

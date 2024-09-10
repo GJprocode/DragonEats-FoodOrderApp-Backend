@@ -1,10 +1,10 @@
-// // C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\AdminActionsController.ts
+// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\AdminActionsController.ts
 
 import mongoose from "mongoose";
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 import User from "../models/user";  // Import User model if you want to verify user existence
-
+import Admin from "../models/admin"; // Admin model is in models/admin.ts
 
 export const getAdminRestaurants = async (req: Request, res: Response) => {
   try {
@@ -60,5 +60,42 @@ export const countRestaurantsByStatus = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error counting restaurants by status:", error);
     res.status(500).json({ message: "Error counting restaurants by status" });
+  }
+};
+
+// Check if the user is an admin by their email
+export const checkAdmin = async (req: Request, res: Response) => {
+  const { email } = req.params;
+
+  try {
+    const admin = await Admin.findOne({ email });
+    if (admin && admin.role === "admin") {
+      return res.json({ isAdmin: true });
+    } else {
+      return res.json({ isAdmin: false });
+    }
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+// New function to fetch the admin email with the required permissions
+export const getAdminContactInfo = async (req: Request, res: Response) => {
+  try {
+    const admin = await Admin.findOne({
+      role: "admin",
+      permissions: { $all: ["update_terms", "update_privacy"] }
+    });
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    return res.json({ email: admin.email });
+  } catch (error) {
+    console.error("Error fetching admin contact info:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -1,3 +1,5 @@
+// C:\Users\gertf\Desktop\FoodApp\backend\src\routes\MyUserRoute.ts
+
 import express from "express";
 import MyUserController from "../controllers/MyUserController";
 import { jwtCheck, jwtParse } from "../middleware/auth";
