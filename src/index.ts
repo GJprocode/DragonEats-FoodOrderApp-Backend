@@ -48,9 +48,9 @@ import myUserRoute from "./routes/MyUserRoute";
 import { v2 as cloudinary } from "cloudinary";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
 import restaurantRoute from "./routes/RestaurantRoute";
-import cityRoutes from './routes/cityRoutes';
-import adminRoutes from "./routes/adminRoutes";
-import adminActionsRoutes from "./routes/adminActionsRoutes";
+import cityRoutes from './routes/cityRoutes';  // Public route
+import adminRoutes from "./routes/adminRoutes";  // JWT-protected
+import adminActionsRoutes from "./routes/adminActionsRoutes";  // JWT-protected
 
 // Connect to MongoDB
 mongoose
