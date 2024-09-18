@@ -1,7 +1,6 @@
 //   C:\Users\gertf\Desktop\FoodApp\backend\src\models\user.ts
 
 
-// user.ts (Mongoose Schema with renamed field)
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
@@ -23,6 +22,9 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     country:{
+        type: String,
+    },
+    role:{
         type: String,
     },
 });
