@@ -7,7 +7,7 @@ import { jwtCheck } from "../middleware/auth";
 const router = Router();
 
 // router.use(jwtCheck);
-
+// need to fix for proper security
 
 router.get('/admin/restaurants', getAdminRestaurants);
 router.post('/admin/update-status/:restaurantId', updateRestaurantStatus);
