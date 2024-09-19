@@ -1,7 +1,8 @@
 // C:\Users\gertf\Desktop\FoodApp\backend\src\routes\adminRoutes.ts
+
 import express from "express";
 import { getAllRestaurants, updateRestaurantStatus } from '../controllers/MyRestaurantController';
-import { checkAdmin, getAdminContactInfo } from "../controllers/AdminActionsController";
+import { checkAdmin, getAdminContactInfo } from "../controllers/AdminActionsController"; // Correct import
 
 const router = express.Router();
 
