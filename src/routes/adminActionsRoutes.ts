@@ -6,7 +6,7 @@ import { jwtCheck } from "../middleware/auth";
 
 const router = Router();
 
-router.use(jwtCheck);
+// router.use(jwtCheck);
 
 router.get('/admin/restaurants', getAdminRestaurants);
 router.post('/admin/update-status/:restaurantId', updateRestaurantStatus);
