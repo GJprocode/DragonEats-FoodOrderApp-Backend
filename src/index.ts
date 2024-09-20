@@ -1,5 +1,3 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\index.ts
-
 import express, { Request, Response } from "express";
 import cors from "cors";
 import "dotenv/config";
@@ -8,9 +6,8 @@ import myUserRoute from "./routes/MyUserRoute";
 import { v2 as cloudinary } from "cloudinary";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
 import restaurantRoute from "./routes/RestaurantRoute";
-import cityRoutes from './routes/cityRoutes';  // Public route
-import adminRoutes from "./routes/adminRoutes";  // JWT-protected
-import adminActionsRoutes from "./routes/adminActionsRoutes";  // JWT-protected
+import cityRoutes from './routes/cityRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 // Connect to MongoDB
 mongoose
@@ -32,7 +29,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "http://localhost:5173",  // Local development frontend
-    "https://dragoneats-foodorderapp-frontend.onrender.com"  // Replace with your production frontend URL
+    "https://dragoneats-foodorderapp-frontend.onrender.com"  // Production frontend URL
   ],
   credentials: true,  // Allow credentials (cookies, authorization headers)
 }));
@@ -43,12 +40,13 @@ app.get("/health", async (req: Request, res: Response) => {
 });
 
 // Define your API routes
+
+
 app.use("/api/my/user", myUserRoute);
 app.use("/api/my/restaurant", MyRestaurantRoute);
 app.use("/api/restaurant", restaurantRoute);
-app.use(cityRoutes);
-app.use(adminRoutes);
-app.use(adminActionsRoutes);
+app.use("/api/cities", cityRoutes); // Adjusted to have a consistent base path
+app.use("/api/admin", adminRoutes); 
 
 // Start the server
 app.listen(7000, () => {
