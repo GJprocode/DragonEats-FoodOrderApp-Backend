@@ -1,12 +1,16 @@
+
+// C:\Users\gertf\Desktop\FoodApp\backend\src\routes\cityRoutes.ts
 // In your backend, create a new route to fetch cities
+// backend\src\routes\cityRoutes.ts
+
 import express from 'express';
 import Restaurant from '../models/restaurant';
 
 const router = express.Router();
 
-router.get('/api/cities', async (req, res) => {
+// Endpoint to fetch unique cities
+router.get('/', async (req, res) => {
   try {
-    // Fetch unique cities from the restaurant collection
     const cities = await Restaurant.distinct('city');
     res.status(200).json(cities);
   } catch (error) {
