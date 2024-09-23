@@ -64,7 +64,7 @@ export const getMyRestaurant = async (req: Request, res: Response): Promise<void
         restaurantImageUrl: "",
         user: userId,
         email: req.userEmail || "",
-        status: "pending",
+        status: "", // default status
         contractType: "",
         contractId: "",
         wholesale: false,
