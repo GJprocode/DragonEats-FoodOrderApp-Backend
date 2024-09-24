@@ -1,3 +1,5 @@
+//C:\Users\gertf\Desktop\FoodApp\backend\tsconfig.json
+
 {
   "compilerOptions": {
     "outDir": "./dist",

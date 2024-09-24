@@ -26,7 +26,7 @@ const restaurantUpload = upload.fields([
   ...menuItemsFields,
 ]);
 
-// GET restaurant for logged-in user
+// GET restaurant for logged-in user actually no validation needed but works with jwt & parse, 
 router.get("/",
    jwtCheck,
     jwtParse,
