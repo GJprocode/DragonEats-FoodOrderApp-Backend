@@ -53,7 +53,7 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
     let restaurant = await Restaurant.findOne({ user: userId });
 
     if (!restaurant) {
-      // Create a restaurant with required default fields
+      // Create a restaurant with required default fields to be able to cerate a restaurant for new  user
       restaurant = new Restaurant({
         user: new mongoose.Types.ObjectId(userId),
         restaurantName: "New Restaurant", // Default value
