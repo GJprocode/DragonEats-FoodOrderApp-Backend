@@ -27,7 +27,10 @@ const restaurantUpload = upload.fields([
 ]);
 
 // GET restaurant for logged-in user
-router.get("/", jwtCheck, jwtParse, getMyRestaurant);
+router.get("/",
+   jwtCheck,
+    jwtParse,
+    getMyRestaurant);
 
 // POST (create) a new restaurant
 router.post(

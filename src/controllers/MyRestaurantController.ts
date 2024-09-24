@@ -41,74 +41,77 @@ export const getAllRestaurants = async (req: Request, res: Response): Promise<vo
 };
 
 // Fetch a specific restaurant for the logged-in user
-export const getMyRestaurant = async (req: Request, res: Response): Promise<void> => {
+// Controller to fetch or create restaurant
+export const getMyRestaurant = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId;  // Use the userId from JWT
 
     if (!userId) {
-      res.status(400).json({ message: "User ID not provided" });
-      return;
+      return res.status(400).json({ message: "User ID not provided" });
     }
 
-    const restaurant = await Restaurant.findOne({ user: userId }).exec();
+    let restaurant = await Restaurant.findOne({ user: userId });
 
     if (!restaurant) {
-      res.status(200).json({
-        restaurantName: "",
-        city: [],
-        country: "",
+      // Create a restaurant with required default fields
+      restaurant = new Restaurant({
+        user: new mongoose.Types.ObjectId(userId),
+        restaurantName: "New Restaurant", // Default value
+        city: ["City"], // Default value
+        country: "Country", // Default value
         deliveryPrice: 0,
         estimatedDeliveryTime: 0,
         cuisines: [],
         menuItems: [],
         restaurantImageUrl: "",
-        user: userId,
-        email: req.userEmail || "",
-        status: "", // default status
-        contractType: "",
-        contractId: "",
-        wholesale: false,
+        status: "Submitted",
       });
-      return;
+      await restaurant.save();
     }
 
-    res.status(200).json(restaurant);
+    res.json(restaurant);
   } catch (error) {
-    console.error("Error fetching restaurant:", error);
-    res.status(500).json({ message: "Error fetching restaurant" });
+    console.error("Error fetching or creating restaurant:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 // Create a new restaurant for the logged-in user
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Check if a restaurant already exists for the logged-in user
     const existingRestaurant = await Restaurant.findOne({ user: req.userId }).exec();
     if (existingRestaurant) {
       res.status(409).json({ message: "User restaurant already exists" });
       return;
     }
 
+    // Ensure user exists in the database
     const user = await User.findById(req.userId);
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
 
+    // Create a new restaurant document
     const restaurant = new Restaurant({
       ...req.body,
-      user: new mongoose.Types.ObjectId(req.userId),
+      user: new mongoose.Types.ObjectId(req.userId), // Link the user
       email: user.email || "",
       lastUpdated: new Date(),
     });
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
+    // Upload restaurant image if provided
     if (files?.restaurantImageFile) {
       const fileBuffer = files.restaurantImageFile[0].buffer;
       await checkImageForInappropriateContent(fileBuffer);
       restaurant.restaurantImageUrl = await uploadImage(files.restaurantImageFile[0]);
     }
 
+    // Handle menu item images if provided
     if (files) {
       for (let i = 0; i < req.body.menuItems.length; i++) {
         const field = `menuItems[${i}].menuItemImageFile`;
@@ -132,6 +135,7 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
       }
     }
 
+    // Save the restaurant to the database
     await restaurant.save();
     res.status(201).json(restaurant);
   } catch (error: unknown) {
