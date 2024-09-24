@@ -26,8 +26,11 @@ const restaurantUpload = upload.fields([
   ...menuItemsFields,
 ]);
 
-// GET restaurant for logged-in user
-router.get("/", jwtCheck, jwtParse, getMyRestaurant);
+// GET restaurant for logged-in user actually no validation needed but works with jwt & parse, 
+router.get("/",
+   jwtCheck,
+    jwtParse,
+    getMyRestaurant);
 
 // POST (create) a new restaurant
 router.post(

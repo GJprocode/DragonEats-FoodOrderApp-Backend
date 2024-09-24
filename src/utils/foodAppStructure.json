@@ -6,13 +6,13 @@
   "backend": {
     ".env": "file",
     ".gitignore": "file",
+    "backend_diff_a771ab6_b7b46a3.txt": "file",
     "package-lock.json": "file",
     "package.json": "file",
     "README.md": "file",
     "src": {
       "controllers": {
         "AdminActionsController.ts": "file",
-        "AdminController.ts": "file",
         "MyRestaurantController.ts": "file",
         "MyUserController.ts": "file",
         "RestaurantController.ts": "file"
@@ -24,12 +24,10 @@
       },
       "models": {
         "admin.ts": "file",
-        "adminpanelactions.ts": "file",
         "restaurant.ts": "file",
         "user.ts": "file"
       },
       "routes": {
-        "adminActionsRoutes.ts": "file",
         "adminRoutes.ts": "file",
         "cityRoutes.ts": "file",
         "MyRestaurantRoute.ts": "file",
@@ -49,6 +47,7 @@
         "imageModerator.ts": "file",
         "printStructure.ts": "file",
         "textFilter.ts": "file",
+        "whitelistadd.js": "file",
         "whitelistadd.ts": "file"
       }
     },
@@ -59,12 +58,14 @@
     ".eslintrc.cjs": "file",
     ".gitignore": "file",
     "components.json": "file",
+    "frontend_diff_75f4d73_703e5a2.txt": "file",
     "index.html": "file",
     "package-lock.json": "file",
     "package.json": "file",
     "postcss.config.js": "file",
     "public": {
       "dragon.svg": "file",
+      "google0c43e2dd203680d9.html": "file",
       "react.svg": "file",
       "vite.svg": "file"
     },
@@ -112,6 +113,8 @@
           "button.tsx": "file",
           "card.tsx": "file",
           "checkbox.tsx": "file",
+          "ConsentBanner.tsx": "file",
+          "cookiesUtils.tsx": "file",
           "dropdown-menu.tsx": "file",
           "form.tsx": "file",
           "input.tsx": "file",
@@ -150,6 +153,7 @@
         "layout.tsx": "file"
       },
       "lib": {
+        "PriceFormatter.ts": "file",
         "utils.ts": "file"
       },
       "main.tsx": "file",

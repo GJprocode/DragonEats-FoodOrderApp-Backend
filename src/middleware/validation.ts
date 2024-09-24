@@ -22,7 +22,7 @@ export const validateMyUserRequest = [
   handleValidationErrors,
 ];
 
-// Validation for restaurant creation/update
+// Validation for restaurant creation/update (if not cerate a vale in )
 export const validateMyRestaurantRequest = [
   body("restaurantName").isString().notEmpty().withMessage("Restaurant name is required."),
   body("city").isArray().withMessage("City must be an array of strings."),

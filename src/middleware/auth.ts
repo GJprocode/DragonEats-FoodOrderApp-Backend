@@ -10,7 +10,7 @@ import User from '../models/user';
 declare global {
   namespace Express {
     interface Request {
-      userId: string;
+      userId?: string;
       userEmail?: string;
       role?: string; // Added role for admin/user differentiation
     }
@@ -35,14 +35,16 @@ export const jwtParse = async (req: Request, res: Response, next: NextFunction) 
   const token = authorization.split(" ")[1];
 
   try {
-    const decoded = jwt.decode(token) as jwt.JwtPayload;
-    const user = await User.findOne({ auth0Id: decoded.sub });
+    const decoded = jwt.decode(token) as jwt.JwtPayload;  // Decode the JWT token
+    const auth0Id = decoded.sub;  // Extract the Auth0 ID from the token
+
+    const user = await User.findOne({ auth0Id });  // Find the user by Auth0 ID
 
     if (!user) {
-      return res.sendStatus(401);
+      return res.sendStatus(401);  // Unauthorized if no user found
     }
 
-    req.userId = user._id.toString();
+    req.userId = user._id.toString();  // Use the MongoDB user _id
     req.userEmail = user.email;
     next();
   } catch (error) {
@@ -50,6 +52,7 @@ export const jwtParse = async (req: Request, res: Response, next: NextFunction) 
     return res.sendStatus(401);
   }
 };
+
 
 // Middleware for verifying user role (admin/user)
 export const verifyRole = async (req: Request, res: Response, next: NextFunction) => {

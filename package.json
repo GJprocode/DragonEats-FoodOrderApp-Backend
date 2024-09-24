@@ -26,7 +26,6 @@
     "express-oauth2-jwt-bearer": "^1.6.0",
     "express-validator": "^7.0.1",
     "file-type": "^19.4.1",
-    "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "leo-profanity": "^1.7.0",
     "mongodb": "^6.5.0",
@@ -37,12 +36,21 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.25.6",
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.4",
+    "@babel/preset-typescript": "^7.24.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/file-type": "^10.9.1",
+    "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.16.1",
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "install": "^0.13.0",
+    "js-cookie": "^3.0.5",
     "nodemon": "^3.1.0",
+    "npm": "^10.8.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }
