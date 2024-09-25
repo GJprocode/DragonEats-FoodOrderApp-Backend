@@ -57,6 +57,7 @@
     ".env": "file",
     ".eslintrc.cjs": "file",
     ".gitignore": "file",
+    ".swcrc": "file",
     "components.json": "file",
     "frontend_diff_75f4d73_703e5a2.txt": "file",
     "index.html": "file",
