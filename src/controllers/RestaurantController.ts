@@ -63,14 +63,15 @@ export const searchRestaurant = async (req: Request, res: Response) => {
   }
 };
 
-// Function to get all distinct cities that have restaurants
+// Function to get all distinct cities that have approved restaurants
 export const getCities = async (req: Request, res: Response) => {
   try {
-    const cities = await Restaurant.distinct("city");
+    // Fetch distinct cities from only approved restaurants
+    const cities = await Restaurant.distinct("city", { status: "approved" });
     res.json(cities);
   } catch (error) {
-    console.error("Error fetching cities:", error);
-    res.status(500).json({ message: "Error fetching cities" });
+    console.error("Error fetching approved cities:", error);
+    res.status(500).json({ message: "Error fetching approved cities" });
   }
 };
 

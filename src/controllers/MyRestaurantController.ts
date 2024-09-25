@@ -12,8 +12,10 @@ const uploadImage = async (file: Express.Multer.File): Promise<string> => {
   try {
     const base64Image = Buffer.from(file.buffer).toString("base64");
     const dataURI = `data:${file.mimetype};base64,${base64Image}`;
-    const uploadResponse = await cloudinary.v2.uploader.upload(dataURI);
-    return uploadResponse.url;
+    const uploadResponse = await cloudinary.v2.uploader.upload(dataURI, {
+      secure: true // Ensure HTTPS is used for the returned URL
+    });
+    return uploadResponse.secure_url;//// Use the HTTPS secure_url
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error uploading image:", error.message);
