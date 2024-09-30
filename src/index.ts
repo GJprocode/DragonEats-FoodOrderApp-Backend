@@ -8,6 +8,7 @@ import MyRestaurantRoute from "./routes/MyRestaurantRoute";
 import restaurantRoute from "./routes/RestaurantRoute";
 import cityRoutes from './routes/cityRoutes';
 import adminRoutes from './routes/adminRoutes';
+import orderRoute from "./routes/OrderRoute"
 
 // Connect to MongoDB
 mongoose
@@ -48,6 +49,7 @@ app.use("/api/my/restaurant", MyRestaurantRoute);
 app.use("/api/restaurant", restaurantRoute);
 app.use("/api/cities", cityRoutes); // Adjusted to have a consistent base path
 app.use("/api/admin", adminRoutes); 
+app.use("/api/order", orderRoute);
 
 // Start the server
 app.listen(7000, () => {

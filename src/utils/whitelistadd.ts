@@ -1,26 +1,32 @@
+// does not work after adding email authentication so just increased api ip address range
+// for less frequent manually adding whitelisted IP in networks tab, leave for now. 
+
 require('dotenv').config();
 const axios = require('axios');
 
+// Function to get current public IP
+async function getCurrentIP() {
+  const response = await axios.get('https://api.ipify.org?format=json');
+  return response.data.ip;
+}
+
+// Function to add IP to MongoDB Atlas whitelist
 async function addIPToWhitelist() {
   try {
-    // Step 1: Get your current public IP
-    const ipResponse = await axios.get('https://api.ipify.org?format=json');
-    const currentIP = ipResponse.data.ip;
+    const currentIP = await getCurrentIP();
     console.log(`Current IP: ${currentIP}`);
-
-    // Step 2: Get the MongoDB Atlas Project ID (groupId) from environment variables
+    
     const groupId = process.env.PROJECT_ID;
     const apiUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/accessList`;
-
-    // Step 3: Define your API Key and IP Access List Payload
+    
     const publicKey = process.env.MONGODB_PUBLIC_KEY;
     const privateKey = process.env.MONGODB_PRIVATE_KEY;
+    
     const payload = {
       ipAddress: currentIP,
       comment: 'Automated IP Whitelist Entry',
     };
 
-    // Step 4: Send a POST request to MongoDB Atlas API to update the IP whitelist
     const response = await axios.post(apiUrl, payload, {
       auth: {
         username: publicKey,
@@ -30,26 +36,20 @@ async function addIPToWhitelist() {
         'Content-Type': 'application/json',
       },
     });
-
-    console.log(`Response from MongoDB Atlas: ${response.statusText}`);
-  } catch (error) {
-    // Type assertion to `Error` or `any` to safely access `message` and other properties
-    const err = error as Error;
-    console.error('Error adding IP to whitelist:', err.message);
+    
+    console.log('IP successfully added:', response.data);
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error response:', error.response?.data);
+    } else {
+      console.error('Unexpected error:', error);
+    }
   }
+  
 }
 
+// Run the function to add IP to the whitelist
 addIPToWhitelist();
 
 
-// cd backend
-// PS C:\Users\gertf\Desktop\FoodApp\backend> npx tsc src/utils/whitelistadd.ts
-// npx tsc src/utils/whitelistadd.ts
-
-
-
-// other
-// npm install --save-dev ts-node
-// ts-node whitelistadd.ts
-//npx ts-node src/utils/whitelistadd.ts
-
+// npx ts-node src/utils/whitelistadd.ts

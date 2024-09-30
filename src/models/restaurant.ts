@@ -1,6 +1,17 @@
 // C:\Users\gertf\Desktop\FoodApp\backend\src\models\restaurant.ts
+// below new for orders
+import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
+const menuItemSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    default: () => new mongoose.Types.ObjectId(),
+  },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+});
 
-import mongoose, { Schema, Document } from "mongoose";
+export type MenuItemType = InferSchemaType<typeof menuItemSchema>;
 
 interface Restaurant extends Document {
   restaurantName: string;
