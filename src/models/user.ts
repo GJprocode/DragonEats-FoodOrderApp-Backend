@@ -1,5 +1,4 @@
-//   C:\Users\gertf\Desktop\FoodApp\backend\src\models\user.ts
-
+// C:\Users\gertf\Desktop\FoodApp\backend\src\models\user.ts
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
