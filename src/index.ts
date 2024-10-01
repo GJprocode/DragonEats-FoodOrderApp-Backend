@@ -34,7 +34,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // Local development frontend
-      "https://dragoneats-foodorderapp-frontend.onrender.com/", // Production frontend URL
+      "https://dragoneats-foodorderapp-frontend.onrender.com", // Production frontend URL
     ],
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
