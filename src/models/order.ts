@@ -1,3 +1,4 @@
+// C:\Users\gertf\Desktop\FoodApp\backend\src\models\order.ts
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
@@ -11,7 +12,7 @@ const orderSchema = new mongoose.Schema({
   },
   cartItems: [
     {
-      menuItemId: { type: String, required: true },
+      menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
       quantity: { type: Number, required: true },
       name: { type: String, required: true },
     },

@@ -105,7 +105,6 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
     });
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-
     // Upload restaurant image if provided
     if (files?.restaurantImageFile) {
       const fileBuffer = files.restaurantImageFile[0].buffer;
@@ -117,23 +116,26 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
     if (files) {
       for (let i = 0; i < req.body.menuItems.length; i++) {
         const field = `menuItems[${i}].menuItemImageFile`;
+        let menuItemImageUrl = req.body.menuItems[i].imageUrl;
+
         if (files[field]) {
           const fileBuffer = files[field][0].buffer;
           await checkImageForInappropriateContent(fileBuffer);
-          const menuItemImageUrl = await uploadImage(files[field][0]);
-
-          restaurant.menuItems[i] = {
-            name: req.body.menuItems[i]?.name || "",
-            price: req.body.menuItems[i]?.price || 0,
-            imageUrl: menuItemImageUrl,
-          };
-        } else {
-          restaurant.menuItems[i] = {
-            name: req.body.menuItems[i]?.name || "",
-            price: req.body.menuItems[i]?.price || 0,
-            imageUrl: req.body.menuItems[i]?.imageUrl || "",
-          };
+          menuItemImageUrl = await uploadImage(files[field][0]);
         }
+
+        // Ensure that _id is set for each menu item
+        let menuItemId = req.body.menuItems[i]._id;
+        if (!menuItemId) {
+          menuItemId = new mongoose.Types.ObjectId();
+        }
+
+        restaurant.menuItems.push({
+          _id: menuItemId,
+          name: req.body.menuItems[i]?.name || "",
+          price: req.body.menuItems[i]?.price || 0,
+          imageUrl: menuItemImageUrl || "",
+        });
       }
     }
 
@@ -196,7 +198,14 @@ export const updateMyRestaurant = async (req: Request, res: Response): Promise<v
           menuItemImageUrl = await uploadImage(files[field][0]);
         }
 
+        // Ensure that _id is set for each menu item
+        let menuItemId = req.body.menuItems[i]._id;
+        if (!menuItemId) {
+          menuItemId = new mongoose.Types.ObjectId();
+        }
+
         restaurant.menuItems.push({
+          _id: menuItemId,
           name: req.body.menuItems[i].name || "",
           price: req.body.menuItems[i].price || 0,
           imageUrl: menuItemImageUrl || "",

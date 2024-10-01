@@ -1,60 +1,58 @@
 // C:\Users\gertf\Desktop\FoodApp\backend\src\models\restaurant.ts
-// below new for orders
-import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
-const menuItemSchema = new mongoose.Schema({
+
+import mongoose, { Schema, Document, Types } from "mongoose";
+
+const menuItemSchema = new Schema({
   _id: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Types.ObjectId,
     required: true,
-    default: () => new mongoose.Types.ObjectId(),
+    default: () => new Types.ObjectId(),
   },
   name: { type: String, required: true },
   price: { type: Number, required: true },
+  imageUrl: String,
 });
 
-export type MenuItemType = InferSchemaType<typeof menuItemSchema>;
+export type MenuItemType = {
+  _id: Types.ObjectId;
+  name: string;
+  price: number;
+  imageUrl?: string;
+};
 
 interface Restaurant extends Document {
+  _id: Types.ObjectId;
   restaurantName: string;
   city: string[];
   country: string;
   deliveryPrice: number;
   estimatedDeliveryTime: number;
   cuisines: string[];
-  menuItems: {
-    name: string;
-    price: number;
-    imageUrl: string;
-  }[];
-  restaurantImageUrl: string;
+  menuItems: MenuItemType[]; // Use MenuItemType here
+  restaurantImageUrl?: string;
   status: string;
   contractType?: string;
   contractId?: string;
   lastUpdated?: Date;
-  user: mongoose.Types.ObjectId;
+  user: Types.ObjectId;
   wholesale?: boolean;
   email: string;
 }
 
-const RestaurantSchema: Schema = new Schema({
+const RestaurantSchema = new Schema({
   restaurantName: { type: String, required: true },
   city: [{ type: String, required: true }],
   country: { type: String, required: true },
   deliveryPrice: { type: Number, required: true },
   estimatedDeliveryTime: { type: Number, required: true },
   cuisines: [{ type: String, required: true }],
-  menuItems: [
-    {
-      name: String,
-      price: Number,
-      imageUrl: String,
-    },
-  ],
+  menuItems: [menuItemSchema],
   restaurantImageUrl: String,
   status: { type: String, required: true },
-  contractType: { type: String },
-  contractId: { type: String },
+  contractType: String,
+  contractId: String,
   lastUpdated: { type: Date, default: Date.now },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  user: { type: Types.ObjectId, ref: "User", required: true },
   wholesale: { type: Boolean, default: false },
   email: { type: String, default: "" },
 });
