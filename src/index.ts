@@ -41,11 +41,8 @@ app.use(
 );
 
 // **Define the webhook route before body parsers**
-app.post(
-  "/api/order/checkout/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhookHandler
-);
+
+app.use("/api/order/checkout/webhook", express.raw({ type: "*/*" }));
 
 // Parse JSON bodies (must be defined after the webhook route)
 app.use(express.json());
