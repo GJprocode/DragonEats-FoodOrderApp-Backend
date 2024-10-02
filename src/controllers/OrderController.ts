@@ -4,13 +4,32 @@ import Restaurant, { MenuItemType } from "../models/restaurant";
 import Order from "../models/order";
 import mongoose from "mongoose";
 
+// Initialize Stripe with your API key
 const STRIPE = new Stripe(process.env.STRIPE_API_KEY as string, {
   apiVersion: "2022-11-15" as Stripe.LatestApiVersion,
 });
 
+// Frontend URL and Stripe Webhook Secret from environment variables
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
+// Define the CheckoutSessionRequest type
+interface CheckoutSessionRequest {
+  cartItems: {
+    menuItemId: string;
+    name: string;
+    quantity: number;
+  }[];
+  deliveryDetails: {
+    email: string;
+    name: string;
+    address: string;
+    city: string;
+  };
+  restaurantId: string;
+}
+
+// Fetch user's orders
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const orders = await Order.find({ user: req.userId })
@@ -24,21 +43,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
   }
 };
 
-type CheckoutSessionRequest = {
-  cartItems: {
-    menuItemId: string;
-    name: string;
-    quantity: number;
-  }[];
-  deliveryDetails: {
-    email: string;
-    name: string;
-    address: string;
-    city: string;
-  };
-  restaurantId: string;
-};
-
+// Stripe Webhook Handler
 export const stripeWebhookHandler = async (req: Request, res: Response) => {
   let event;
 
@@ -81,7 +86,6 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
       break;
 
     // Handle other event types as needed
-
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
@@ -90,6 +94,7 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
   res.json({ received: true });
 };
 
+// Create Checkout Session
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const checkoutSessionRequest: CheckoutSessionRequest = req.body;
@@ -135,11 +140,12 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   }
 };
 
+// Helper function to create line items for the Stripe session
 const createLineItems = (
   checkoutSessionRequest: CheckoutSessionRequest,
   menuItems: MenuItemType[]
-) => {
-  const lineItems = checkoutSessionRequest.cartItems.map((cartItem) => {
+): Stripe.Checkout.SessionCreateParams.LineItem[] => {
+  return checkoutSessionRequest.cartItems.map((cartItem) => {
     const menuItem = menuItems.find(
       (item) => item._id.toString() === cartItem.menuItemId.toString()
     );
@@ -148,7 +154,7 @@ const createLineItems = (
       throw new Error(`Menu item not found: ${cartItem.menuItemId}`);
     }
 
-    const line_item: Stripe.Checkout.SessionCreateParams.LineItem = {
+    return {
       price_data: {
         currency: "usd",
         unit_amount: menuItem.price,
@@ -158,20 +164,17 @@ const createLineItems = (
       },
       quantity: cartItem.quantity,
     };
-
-    return line_item;
   });
-
-  return lineItems;
 };
 
+// Helper function to create a Stripe session
 const createSession = async (
   lineItems: Stripe.Checkout.SessionCreateParams.LineItem[],
   orderId: string,
   deliveryPrice: number,
   restaurantId: string
 ) => {
-  const sessionData = await STRIPE.checkout.sessions.create({
+  return STRIPE.checkout.sessions.create({
     line_items: lineItems,
     shipping_options: [
       {
@@ -193,8 +196,6 @@ const createSession = async (
     success_url: `${FRONTEND_URL}/order-status?success=true`,
     cancel_url: `${FRONTEND_URL}/detail/${restaurantId}?cancelled=true`,
   });
-
-  return sessionData;
 };
 
 export default {
