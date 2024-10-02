@@ -1,4 +1,4 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\index.ts
+// backend/src/index.ts
 import express, { Request, Response } from "express";
 import cors from "cors";
 import "dotenv/config";
@@ -10,8 +10,27 @@ import restaurantRoute from "./routes/RestaurantRoute";
 import cityRoutes from "./routes/cityRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import orderRoute from "./routes/OrderRoute";
-import { stripeWebhookHandler } from "./controllers/OrderController";
+import OrderController from "./controllers/OrderController";
 
+const app = express();
+
+// Add global error handlers
+process.on("uncaughtException", (err) => {
+  console.error("There was an uncaught error:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+// Log environment variables presence
+console.log("Environment variables loaded:");
+console.log("MONGODB_CONNECTION_STRING is defined:", !!process.env.MONGODB_CONNECTION_STRING);
+console.log("CLOUDINARY_CLOUD_NAME is defined:", !!process.env.CLOUDINARY_CLOUD_NAME);
+console.log("STRIPE_API_KEY is defined:", !!process.env.STRIPE_API_KEY);
+console.log("STRIPE_WEBHOOK_SECRET is defined:", !!process.env.STRIPE_WEBHOOK_SECRET);
+console.log("FRONTEND_URL is defined:", !!process.env.FRONTEND_URL);
 
 // Connect to MongoDB
 mongoose
@@ -24,31 +43,34 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
   api_key: process.env.CLOUDINARY_API_KEY as string,
   api_secret: process.env.CLOUDINARY_API_SECRET as string,
-  secure: true, // Force HTTPS for all Cloudinary URLs
+  secure: true,
 });
 
-const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dragoneats-foodorderapp-frontend.onrender.com",
+];
 
 // CORS configuration
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", // Local development frontend
-      "https://dragoneats-foodorderapp-frontend.onrender.com", // Production frontend URL
-    ],
-    credentials: true, // Allow credentials (cookies, authorization headers)
+    origin: allowedOrigins,
+    credentials: true,
   })
 );
 
-// **Define the webhook route before body parsers**
-
-app.use("/api/order/checkout/webhook", express.raw({ type: "*/*" }));
+// Define the webhook route before body parsers
+app.post(
+  "/api/order/checkout/webhook",
+  express.raw({ type: "application/json" }),
+  OrderController.stripeWebhookHandler
+);
 
 // Parse JSON bodies (must be defined after the webhook route)
 app.use(express.json());
 
 // Health check route
-app.get("/health", async (req: Request, res: Response) => {
+app.get("/health", (req: Request, res: Response) => {
   res.send({ message: "Health ok!" });
 });
 
@@ -61,6 +83,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/order", orderRoute);
 
 // Start the server
-app.listen(7000, () => {
-  console.log("Server started on http://localhost:7000");
+const PORT = process.env.PORT || 7000;
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });

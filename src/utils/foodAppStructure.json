@@ -6,7 +6,6 @@
   "backend": {
     ".env": "file",
     ".gitignore": "file",
-    "backend_diff_a771ab6_b7b46a3.txt": "file",
     "package-lock.json": "file",
     "package.json": "file",
     "README.md": "file",
@@ -15,6 +14,7 @@
         "AdminActionsController.ts": "file",
         "MyRestaurantController.ts": "file",
         "MyUserController.ts": "file",
+        "OrderController.ts": "file",
         "RestaurantController.ts": "file"
       },
       "index.ts": "file",
@@ -24,6 +24,7 @@
       },
       "models": {
         "admin.ts": "file",
+        "order.ts": "file",
         "restaurant.ts": "file",
         "user.ts": "file"
       },
@@ -32,6 +33,7 @@
         "cityRoutes.ts": "file",
         "MyRestaurantRoute.ts": "file",
         "MyUserRoute.ts": "file",
+        "OrderRoute.ts": "file",
         "RestaurantRoute.ts": "file"
       },
       "types": {
@@ -47,7 +49,6 @@
         "imageModerator.ts": "file",
         "printStructure.ts": "file",
         "textFilter.ts": "file",
-        "whitelistadd.js": "file",
         "whitelistadd.ts": "file"
       }
     },
@@ -59,7 +60,6 @@
     ".gitignore": "file",
     ".swcrc": "file",
     "components.json": "file",
-    "frontend_diff_75f4d73_703e5a2.txt": "file",
     "index.html": "file",
     "package-lock.json": "file",
     "package.json": "file",
@@ -76,6 +76,7 @@
         "AdminPanelApi.tsx": "file",
         "MyRestaurantApi.tsx": "file",
         "MyUserApi.tsx": "file",
+        "OrderApi.tsx": "file",
         "RestaurantApi.tsx": "file"
       },
       "AppRoutes.tsx": "file",
@@ -91,6 +92,7 @@
       },
       "components": {
         "BusinessTypeFilter.tsx": "file",
+        "CheckoutButton.tsx": "file",
         "CuisineFilter.tsx": "file",
         "Footer.tsx": "file",
         "header.tsx": "file",
@@ -116,6 +118,7 @@
           "checkbox.tsx": "file",
           "ConsentBanner.tsx": "file",
           "cookiesUtils.tsx": "file",
+          "dialog.tsx": "file",
           "dropdown-menu.tsx": "file",
           "form.tsx": "file",
           "input.tsx": "file",
@@ -166,6 +169,7 @@
         "ManageRestaurantPage.tsx": "file",
         "PrivacyPolicy.tsx": "file",
         "SearchPage.tsx": "file",
+        "SignUpPage.tsx": "file",
         "TermsOfService.tsx": "file",
         "UserProfilePage.tsx": "file"
       },

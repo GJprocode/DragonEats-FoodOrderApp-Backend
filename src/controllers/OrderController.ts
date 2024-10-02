@@ -1,11 +1,14 @@
+
+// backend/src/controllers/OrderController.ts
 import Stripe from "stripe";
 import { Request, Response } from "express";
 import Restaurant, { MenuItemType } from "../models/restaurant";
 import Order from "../models/order";
 import mongoose from "mongoose";
 
-const STRIPE = new Stripe(process.env.STRIPE_API_KEY as string, {
-  apiVersion: "2022-11-15" as Stripe.LatestApiVersion,
+const STRIPE_API_KEY = process.env.STRIPE_API_KEY as string;
+const STRIPE = new Stripe(STRIPE_API_KEY, {
+  apiVersion: "2022-11-15" as any, // Use the correct API version
 });
 
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
@@ -16,19 +19,21 @@ type CheckoutSessionRequest = {
   cartItems: {
     menuItemId: string;
     name: string;
-    quantity: number;
+    quantity: number; // Ensure this is a number
   }[];
   deliveryDetails: {
     email: string;
     name: string;
     address: string;
     city: string;
+    country?: string; // Include any additional fields you use
   };
   restaurantId: string;
 };
 
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
+    console.log("Fetching orders for user:", req.userId);
     const orders = await Order.find({ user: req.userId })
       .populate("restaurant")
       .populate("user");
@@ -43,8 +48,12 @@ export const getMyOrders = async (req: Request, res: Response) => {
 export const stripeWebhookHandler = async (req: Request, res: Response) => {
   let event;
 
+  console.log("Received Stripe webhook");
   try {
     const sig = req.headers["stripe-signature"] as string;
+
+    // Log to ensure the signature is received
+    console.log("Stripe signature:", sig ? "Present" : "Missing");
 
     // Use the raw body as provided by Stripe
     event = STRIPE.webhooks.constructEvent(
@@ -52,6 +61,8 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
       sig,
       STRIPE_ENDPOINT_SECRET
     );
+
+    console.log("Stripe event constructed:", event.type);
   } catch (error: any) {
     console.error("Webhook signature verification failed:", error.message);
     return res.status(400).send(`Webhook Error: ${error.message}`);
@@ -62,6 +73,8 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
     case "checkout.session.completed":
       const session = event.data.object as Stripe.Checkout.Session;
       const orderId = session.metadata?.orderId;
+
+      console.log("Processing checkout.session.completed for order:", orderId);
 
       if (orderId) {
         try {
@@ -91,15 +104,21 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
 
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
+    console.log("Creating checkout session for user:", req.userId);
     const checkoutSessionRequest: CheckoutSessionRequest = req.body;
+
+    console.log("CheckoutSessionRequest:", checkoutSessionRequest);
 
     const restaurant = await Restaurant.findById(
       checkoutSessionRequest.restaurantId
     );
 
     if (!restaurant) {
+      console.error("Restaurant not found:", checkoutSessionRequest.restaurantId);
       throw new Error("Restaurant not found");
     }
+
+    console.log("Restaurant found:", restaurant.restaurantName);
 
     const newOrder = new Order({
       restaurant: restaurant._id,
@@ -110,10 +129,14 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       createdAt: new Date(),
     });
 
+    console.log("New order created:", newOrder._id);
+
     const lineItems = createLineItems(
       checkoutSessionRequest,
       restaurant.menuItems
     );
+
+    console.log("Line items for Stripe session:", lineItems);
 
     const session = await createSession(
       lineItems,
@@ -123,10 +146,15 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     );
 
     if (!session.url) {
+      console.error("Error creating Stripe session: No URL returned");
       return res.status(500).json({ message: "Error creating Stripe session" });
     }
 
+    console.log("Stripe session created:", session.id);
+
     await newOrder.save();
+    console.log("New order saved to database:", newOrder._id);
+
     res.json({ url: session.url });
   } catch (error: any) {
     console.error("Error creating checkout session:", error);
@@ -144,18 +172,25 @@ const createLineItems = (
     );
 
     if (!menuItem) {
+      console.error("Menu item not found:", cartItem.menuItemId);
       throw new Error(`Menu item not found: ${cartItem.menuItemId}`);
     }
+
+    // Ensure price is a number and convert to cents
+    const menuItemPrice = typeof menuItem.price === "number"
+      ? menuItem.price
+      : parseFloat(menuItem.price);
+    const unitAmountInCents = Math.round(menuItemPrice * 100);
 
     const line_item: Stripe.Checkout.SessionCreateParams.LineItem = {
       price_data: {
         currency: "usd",
-        unit_amount: menuItem.price,
+        unit_amount: unitAmountInCents,
         product_data: {
           name: menuItem.name,
         },
       },
-      quantity: cartItem.quantity,
+      quantity: Number(cartItem.quantity),
     };
 
     return line_item;
@@ -170,7 +205,12 @@ const createSession = async (
   deliveryPrice: number,
   restaurantId: string
 ) => {
+  // Convert delivery price to cents
+  const deliveryPriceInCents = Math.round(deliveryPrice * 100);
+
+  console.log("Creating Stripe checkout session...");
   const sessionData = await STRIPE.checkout.sessions.create({
+    payment_method_types: ["card"],
     line_items: lineItems,
     shipping_options: [
       {
@@ -178,7 +218,7 @@ const createSession = async (
           display_name: "Delivery",
           type: "fixed_amount",
           fixed_amount: {
-            amount: deliveryPrice,
+            amount: deliveryPriceInCents,
             currency: "usd",
           },
         },
@@ -193,6 +233,8 @@ const createSession = async (
     cancel_url: `${FRONTEND_URL}/detail/${restaurantId}?cancelled=true`,
   });
 
+  console.log("Stripe session created with ID:", sessionData.id);
+
   return sessionData;
 };
 
@@ -201,3 +243,4 @@ export default {
   createCheckoutSession,
   stripeWebhookHandler,
 };
+
