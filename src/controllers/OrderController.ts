@@ -180,7 +180,7 @@ const createLineItems = (
     const menuItemPrice = typeof menuItem.price === "number"
       ? menuItem.price
       : parseFloat(menuItem.price);
-    const unitAmountInCents = Math.round(menuItemPrice * 100);
+    const unitAmountInCents = Math.round(menuItemPrice);
 
     const line_item: Stripe.Checkout.SessionCreateParams.LineItem = {
       price_data: {
@@ -206,7 +206,7 @@ const createSession = async (
   restaurantId: string
 ) => {
   // Convert delivery price to cents
-  const deliveryPriceInCents = Math.round(deliveryPrice * 100);
+  const deliveryPriceInCents = Math.round(deliveryPrice);
 
   console.log("Creating Stripe checkout session...");
   const sessionData = await STRIPE.checkout.sessions.create({
