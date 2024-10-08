@@ -5,6 +5,7 @@ import multer from "multer";
 import { getMyRestaurant, createMyRestaurant, updateMyRestaurant } from "../controllers/MyRestaurantController";
 import { jwtCheck, jwtParse } from "../middleware/auth";
 import { validateMyRestaurantRequest } from "../middleware/validation";
+import  MyRestaurantController from "../controllers/MyRestaurantController";
 
 const router = express.Router();
 
@@ -15,6 +16,21 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB
   },
 });
+
+router.get(
+  "/order",
+  jwtCheck,
+  jwtParse,
+  MyRestaurantController.getMyRestaurantOrders
+);
+
+router.patch(
+  "/order/:orderId/status",
+  jwtCheck,
+  jwtParse,
+  MyRestaurantController.updateOrderStatus
+);
+
 
 const menuItemsFields = Array.from({ length: 40 }, (_, i) => ({
   name: `menuItems[${i}].menuItemImageFile`,

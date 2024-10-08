@@ -8,12 +8,14 @@ const orderSchema = new mongoose.Schema({
     name: { type: String, required: true },
     address: { type: String, required: true },
     city: { type: String, required: true },
+    cellphone: { type: String, required: true }, // Adding cellphone field
   },
   cartItems: [
     {
       menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
       quantity: { type: Number, required: true },
       name: { type: String, required: true },
+      price: { type: Number, required: true }, // Ensure this is Number
     },
   ],
   totalAmount: { type: Number, default: 0 },  // Default to 0

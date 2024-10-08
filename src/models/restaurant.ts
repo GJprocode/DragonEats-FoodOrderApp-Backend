@@ -1,5 +1,3 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\models\restaurant.ts
-
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 const menuItemSchema = new Schema({
@@ -9,7 +7,7 @@ const menuItemSchema = new Schema({
     default: () => new Types.ObjectId(),
   },
   name: { type: String, required: true },
-  price: { type: Number, required: true },
+  price: { type: Number, required: true }, // Ensure this is Number
   imageUrl: String,
 });
 
@@ -37,6 +35,7 @@ interface Restaurant extends Document {
   user: Types.ObjectId;
   wholesale?: boolean;
   email: string;
+  cellphone?: string; // Optional cellphone field
 }
 
 const RestaurantSchema = new Schema({
@@ -55,6 +54,8 @@ const RestaurantSchema = new Schema({
   user: { type: Types.ObjectId, ref: "User", required: true },
   wholesale: { type: Boolean, default: false },
   email: { type: String, default: "" },
+  cellphone: { type: String, default: "" }, // Change to String
+
 });
 
 export default mongoose.model<Restaurant>("Restaurant", RestaurantSchema);

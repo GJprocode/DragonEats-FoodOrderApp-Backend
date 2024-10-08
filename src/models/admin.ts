@@ -1,4 +1,3 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\models\admin.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 interface Admin extends Document {
@@ -8,6 +7,7 @@ interface Admin extends Document {
   country: string;
   name: string;
   address: string;
+  cellphone?: string; // Optional cellphone field
   permissions: string[];
   role: string;
 }
@@ -19,6 +19,7 @@ const AdminSchema: Schema = new Schema({
   country: { type: String },
   name: { type: String },
   address: { type: String },
+  cellphone: { type: String }, // Change to String // Adding cellphone field
   permissions: [{ type: String }],
   role: { type: String, required: true, default: "admin" },
 });

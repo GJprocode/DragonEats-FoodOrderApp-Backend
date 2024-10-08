@@ -1,4 +1,3 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\models\user.ts
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
@@ -15,6 +14,7 @@ const userSchema = new mongoose.Schema({
   address: String,
   city: String,
   country: String,
+  cellphone: { type: String }, 
   role: {
     type: String,
     default: "user" // Default role is 'user'

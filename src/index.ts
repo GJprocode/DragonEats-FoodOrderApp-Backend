@@ -25,12 +25,12 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 // Log environment variables presence
-console.log("Environment variables loaded:");
-console.log("MONGODB_CONNECTION_STRING is defined:", !!process.env.MONGODB_CONNECTION_STRING);
-console.log("CLOUDINARY_CLOUD_NAME is defined:", !!process.env.CLOUDINARY_CLOUD_NAME);
-console.log("STRIPE_API_KEY is defined:", !!process.env.STRIPE_API_KEY);
-console.log("STRIPE_WEBHOOK_SECRET is defined:", !!process.env.STRIPE_WEBHOOK_SECRET);
-console.log("FRONTEND_URL is defined:", !!process.env.FRONTEND_URL);
+// console.log("Environment variables loaded:");
+// console.log("MONGODB_CONNECTION_STRING is defined:", !!process.env.MONGODB_CONNECTION_STRING);
+// console.log("CLOUDINARY_CLOUD_NAME is defined:", !!process.env.CLOUDINARY_CLOUD_NAME);
+// console.log("STRIPE_API_KEY is defined:", !!process.env.STRIPE_API_KEY);
+// console.log("STRIPE_WEBHOOK_SECRET is defined:", !!process.env.STRIPE_WEBHOOK_SECRET);
+// console.log("FRONTEND_URL is defined:", !!process.env.FRONTEND_URL);
 
 // Connect to MongoDB
 mongoose

@@ -14,29 +14,33 @@ const STRIPE = new Stripe(STRIPE_API_KEY, {
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-// Define the CheckoutSessionRequest type if it’s not imported from anywhere
-type CheckoutSessionRequest = {
-  cartItems: {
-    menuItemId: string;
-    name: string;
-    quantity: number; // Ensure this is a number
-  }[];
-  deliveryDetails: {
-    email: string;
-    name: string;
-    address: string;
-    city: string;
-    country?: string; // Include any additional fields you use
+  // Define the CheckoutSessionRequest type if it’s not imported from anywhere
+  type CheckoutSessionRequest = {
+    cartItems: {
+      menuItemId: string;
+      name: string;
+      quantity: number; // Ensure this is a number
+      price: number;
+    }[];
+    deliveryDetails: {
+      email: string;
+      name: string;
+      address: string;
+      city: string;
+      country?: string; // Include any additional fields you use
+      cellphone: string;
+    };
+    restaurantId: string;
   };
-  restaurantId: string;
-};
 
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
-    console.log("Fetching orders for user:", req.userId);
-    const orders = await Order.find({ user: req.userId })
-      .populate("restaurant")
-      .populate("user");
+    // console.log("Fetching orders for user:", req.userId);
+      const orders = await Order.find({ user: req.userId })
+        .populate("restaurant")
+        .populate("user");
+
+    // console.log("Fetched Orders:", orders);
 
     res.json(orders);
   } catch (error) {
@@ -45,10 +49,11 @@ export const getMyOrders = async (req: Request, res: Response) => {
   }
 };
 
+
 export const stripeWebhookHandler = async (req: Request, res: Response) => {
   let event;
 
-  console.log("Received Stripe webhook");
+  // console.log("Received Stripe webhook");
   try {
     const sig = req.headers["stripe-signature"] as string;
 
@@ -104,10 +109,10 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
 
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
-    console.log("Creating checkout session for user:", req.userId);
+    // console.log("Creating checkout session for user:", req.userId);
     const checkoutSessionRequest: CheckoutSessionRequest = req.body;
 
-    console.log("CheckoutSessionRequest:", checkoutSessionRequest);
+    // console.log("CheckoutSessionRequest:", checkoutSessionRequest);
 
     const restaurant = await Restaurant.findById(
       checkoutSessionRequest.restaurantId
@@ -118,7 +123,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       throw new Error("Restaurant not found");
     }
 
-    console.log("Restaurant found:", restaurant.restaurantName);
+    // console.log("Restaurant found:", restaurant.restaurantName);
 
     const newOrder = new Order({
       restaurant: restaurant._id,
@@ -128,8 +133,10 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       cartItems: checkoutSessionRequest.cartItems,
       createdAt: new Date(),
     });
+    // console.log("Checkout Session Request Cart Items:", checkoutSessionRequest.cartItems);
 
-    console.log("New order created:", newOrder._id);
+
+    // console.log("New order created:", newOrder._id);
 
     const lineItems = createLineItems(
       checkoutSessionRequest,
@@ -150,10 +157,10 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       return res.status(500).json({ message: "Error creating Stripe session" });
     }
 
-    console.log("Stripe session created:", session.id);
+    // console.log("Stripe session created:", session.id);
 
     await newOrder.save();
-    console.log("New order saved to database:", newOrder._id);
+    // console.log("New order saved to database:", newOrder._id);
 
     res.json({ url: session.url });
   } catch (error: any) {
@@ -208,7 +215,7 @@ const createSession = async (
   // Convert delivery price to cents
   const deliveryPriceInCents = Math.round(deliveryPrice);
 
-  console.log("Creating Stripe checkout session...");
+  // console.log("Creating Stripe checkout session...");
   const sessionData = await STRIPE.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: lineItems,

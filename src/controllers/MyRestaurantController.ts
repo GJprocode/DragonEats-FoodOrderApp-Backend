@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import User from "../models/user";
 import { checkImageForInappropriateContent } from "../utils/imageModerator";
 import cloudinary from "cloudinary";
+import Order from "../models/order";
 
 // Function to upload an image to Cloudinary
 const uploadImage = async (file: Express.Multer.File): Promise<string> => {
@@ -55,10 +56,11 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
     let restaurant = await Restaurant.findOne({ user: userId });
 
     if (!restaurant) {
-      // Create a restaurant with required default fields to be able to cerate a restaurant for new  user
+      // Create a restaurant with required default fields to be able to create a restaurant for new signed up user
       restaurant = new Restaurant({
         user: new mongoose.Types.ObjectId(userId),
         restaurantName: "New Restaurant", // Default value
+        cellphone: "+123",
         city: ["City"], // Default value
         country: "Country", // Default value
         deliveryPrice: 0,
@@ -67,6 +69,7 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
         menuItems: [],
         restaurantImageUrl: "",
         status: "Submitted",
+        
       });
       await restaurant.save();
     }
@@ -102,6 +105,7 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
       user: new mongoose.Types.ObjectId(req.userId), // Link the user
       email: user.email || "",
       lastUpdated: new Date(),
+      
     });
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
@@ -177,6 +181,7 @@ export const updateMyRestaurant = async (req: Request, res: Response): Promise<v
     restaurant.wholesale = req.body.wholesale;
     restaurant.email = user.email || "";
     restaurant.lastUpdated = new Date();
+    restaurant.cellphone = req.body.cellphone;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
@@ -254,4 +259,58 @@ export const updateRestaurantStatus = async (req: Request, res: Response): Promi
       res.status(500).json({ message: "Unexpected error updating restaurant status" });
     }
   }
+};
+
+const getMyRestaurantOrders = async (req: Request, res: Response) => {
+  try {
+    const restaurant = await Restaurant.findOne({ user: req.userId });
+    if (!restaurant) {
+      return res.status(404).json({ message: "restaurant not found" });
+    }
+
+    const orders = await Order.find({ restaurant: restaurant._id })
+      .populate("restaurant")
+      .populate("user");
+
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "something went wrong" });
+  }
+};
+
+const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "order not found" });
+    }
+
+    const restaurant = await Restaurant.findById(order.restaurant);
+
+    if (restaurant?.user?._id.toString() !== req.userId) {
+      return res.status(401).send();
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.status(200).json(order);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "unable to update order status" });
+  }
+};
+
+
+
+export default {
+  updateOrderStatus,
+  getMyRestaurantOrders,
+  getMyRestaurant,
+  createMyRestaurant,
+  updateMyRestaurant,
 };

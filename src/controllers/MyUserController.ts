@@ -62,7 +62,7 @@ export const updateMyUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const { name, address, city, country } = req.body;
+    const { name, address, city, country, cellphone } = req.body;
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -71,6 +71,7 @@ export const updateMyUser = async (req: Request, res: Response) => {
         address,
         city,
         country,
+        cellphone,
       },
       { new: true }
     );
