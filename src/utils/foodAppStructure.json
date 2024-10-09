@@ -52,6 +52,7 @@
         "whitelistadd.ts": "file"
       }
     },
+    "srcbackend.zip": "file",
     "tsconfig.json": "file"
   },
   "frontend": {
@@ -102,6 +103,8 @@
         "MenuItem.tsx": "file",
         "MobileNav.tsx": "file",
         "MobileNavLinks.tsx": "file",
+        "OrderItemCard.tsx": "file",
+        "OrderStatusHeader.tsx": "file",
         "OrderSummary.tsx": "file",
         "PaginationSelector.tsx": "file",
         "RestaurantDetails.tsx": "file",
@@ -125,14 +128,18 @@
           "label.tsx": "file",
           "LoadingSpinner.tsx": "file",
           "pagination.tsx": "file",
+          "progress.tsx": "file",
+          "select.tsx": "file",
           "separator.tsx": "file",
           "sheet.tsx": "file",
           "sonner.tsx": "file",
+          "tabs.tsx": "file",
           "UsernameMenu.tsx": "file"
         }
       },
       "config": {
-        "restaurant-options-config.tsx": "file"
+        "order-status-config.ts": "file",
+        "restaurant-options-config.ts": "file"
       },
       "custom.d.ts": "file",
       "forms": {
@@ -167,6 +174,8 @@
         "DetailPage.tsx": "file",
         "HomePage.tsx": "file",
         "ManageRestaurantPage.tsx": "file",
+        "OrderStatusDetail.tsx": "file",
+        "OrderStatusPage.tsx": "file",
         "PrivacyPolicy.tsx": "file",
         "SearchPage.tsx": "file",
         "SignUpPage.tsx": "file",

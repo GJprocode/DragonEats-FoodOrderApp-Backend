@@ -8,15 +8,14 @@ const router = express.Router();
 // Apply auth middleware to routes below
 router.use(jwtCheck, jwtParse);
 
+router.patch("/order/:orderId/confirm", OrderController.confirmOrder);
+
+
 // Protected routes
 router.get("/", OrderController.getMyOrders);
 
 router.post("/checkout/create-checkout-session",
     OrderController.
     createCheckoutSession);
-
-// Remove the webhook route from here
-// router.post("/checkout/webhook", OrderController.stripeWebhookHandler);
-
 
 export default router;

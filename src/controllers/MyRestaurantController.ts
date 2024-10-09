@@ -263,21 +263,40 @@ export const updateRestaurantStatus = async (req: Request, res: Response): Promi
 
 const getMyRestaurantOrders = async (req: Request, res: Response) => {
   try {
+    const { status, date } = req.query;
     const restaurant = await Restaurant.findOne({ user: req.userId });
     if (!restaurant) {
-      return res.status(404).json({ message: "restaurant not found" });
+      return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    const orders = await Order.find({ restaurant: restaurant._id })
-      .populate("restaurant")
-      .populate("user");
+    const query: any = { restaurant: restaurant._id };
+
+    // Filter by status if provided
+    if (status) {
+      query.status = status;
+    }
+
+    // Filter by date if provided (using `createdAt` or `dateDelivered`)
+    if (date) {
+      const dateObj = new Date(date as string);
+      const nextDay = new Date(dateObj);
+      nextDay.setDate(dateObj.getDate() + 1);
+
+      query.dateDelivered = {
+        $gte: dateObj,
+        $lt: nextDay,
+      };
+    }
+
+    const orders = await Order.find(query).populate("restaurant").populate("user");
 
     res.json(orders);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "something went wrong" });
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 const updateOrderStatus = async (req: Request, res: Response) => {
   try {
@@ -286,24 +305,29 @@ const updateOrderStatus = async (req: Request, res: Response) => {
 
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ message: "order not found" });
+      return res.status(404).json({ message: "Order not found" });
     }
 
     const restaurant = await Restaurant.findById(order.restaurant);
-
     if (restaurant?.user?._id.toString() !== req.userId) {
       return res.status(401).send();
     }
 
+    // Update the order status and set dateDelivered if the status is 'delivered'
     order.status = status;
+    if (status === "delivered") {
+      order.dateDelivered = new Date(); // Set the current date and time for delivery
+    }
     await order.save();
 
     res.status(200).json(order);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "unable to update order status" });
+    res.status(500).json({ message: "Unable to update order status" });
   }
 };
+
+
 
 
 
