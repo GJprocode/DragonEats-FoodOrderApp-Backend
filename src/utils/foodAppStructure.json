@@ -52,7 +52,6 @@
         "whitelistadd.ts": "file"
       }
     },
-    "srcbackend.zip": "file",
     "tsconfig.json": "file"
   },
   "frontend": {

@@ -11,8 +11,9 @@ import cityRoutes from "./routes/cityRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import orderRoute from "./routes/OrderRoute";
 import OrderController from "./controllers/OrderController";
-
+import helmet from "helmet"; // For security headers
 const app = express();
+
 
 // Add global error handlers
 process.on("uncaughtException", (err) => {
@@ -81,6 +82,19 @@ app.use("/api/restaurant", restaurantRoute);
 app.use("/api/cities", cityRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/order", orderRoute);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "script-src": ["'self'", "https://js.stripe.com"],
+        "frame-src": ["'self'", "https://js.stripe.com"],
+        "connect-src": ["'self'", "https://api.stripe.com"],
+      },
+    },
+  })
+);
 
 // Start the server
 const PORT = process.env.PORT || 7000;

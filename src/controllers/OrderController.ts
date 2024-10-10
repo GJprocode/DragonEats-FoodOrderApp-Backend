@@ -6,30 +6,31 @@ import mongoose from "mongoose";
 
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY as string;
 const STRIPE = new Stripe(STRIPE_API_KEY, {
-  apiVersion: "2022-11-15" as any,
+  apiVersion: "2024-09-30.acacia",
 });
 
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-type CheckoutSessionRequest = {
-  cartItems: {
-    menuItemId: string;
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
-  deliveryDetails: {
-    email: string;
-    name: string;
-    address: string;
-    city: string;
-    country?: string;
-    cellphone: string;
-  };
-  restaurantId: string;
-};
+// type CheckoutSessionRequest = {
+//   cartItems: {
+//     menuItemId: string;
+//     name: string;
+//     quantity: number;
+//     price: number;
+//   }[];
+//   deliveryDetails: {
+//     email: string;
+//     name: string;
+//     address: string;
+//     city: string;
+//     country?: string;
+//     cellphone: string;
+//   };
+//   restaurantId: string;
+// };
 
+// Update order status
 export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
@@ -55,6 +56,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
   }
 };
 
+// Get user orders
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const orders = await Order.find({ user: req.userId })
@@ -75,32 +77,28 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
     const sig = req.headers["stripe-signature"] as string;
     event = STRIPE.webhooks.constructEvent(req.body, sig, STRIPE_ENDPOINT_SECRET);
 
-    switch (event.type) {
-      case "checkout.session.completed":
-        const session = event.data.object as Stripe.Checkout.Session;
-        const orderId = session.metadata?.orderId;
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const orderId = session.metadata?.orderId;
 
-        if (!orderId) {
-          console.error("Order ID not found in the session metadata.");
-          return res.status(400).json({ message: "Order ID missing in session metadata" });
-        }
+      if (!orderId) {
+        console.error("No orderId found in session metadata.");
+        return res.status(400).send("Missing orderId in session metadata.");
+      }
 
-        try {
-          const order = await Order.findById(orderId);
-          if (!order) {
-            return res.status(404).json({ message: "Order not found" });
-          }
+      // Fetch the existing order using the orderId from the session metadata
+      const order = await Order.findById(orderId);
+      if (!order) {
+        console.error("Order not found for orderId:", orderId);
+        return res.status(404).send("Order not found.");
+      }
 
-          order.totalAmount = session.amount_total || 0;
-          order.status = "paid";
-          await order.save();
-        } catch (error) {
-          console.error("Error updating order:", error);
-          return res.status(500).json({ message: "Error updating order status" });
-        }
-        break;
-      default:
-        console.log(`Unhandled event type ${event.type}`);
+      // Update the order status to "paid"
+      order.status = "paid";
+      order.totalAmount = session.amount_total || 0; // Use Stripe's amount_total
+      await order.save();
+
+      console.log(`Order with ID ${orderId} has been updated to "paid".`);
     }
   } catch (error: any) {
     console.error("Webhook signature verification failed:", error.message);
@@ -111,81 +109,90 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
 };
 
 
+
+// Create Stripe checkout session
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
-    const checkoutSessionRequest: CheckoutSessionRequest = req.body;
+    const { cartItems, deliveryDetails, restaurantId, orderId } = req.body;
 
-    const restaurant = await Restaurant.findById(checkoutSessionRequest.restaurantId);
+    // Fetch the restaurant information
+    const restaurant = await Restaurant.findById(restaurantId);
     if (!restaurant) {
+      console.log("Restaurant not found:", restaurantId);
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    const newOrder = new Order({
-      restaurant: restaurant._id,
-      user: new mongoose.Types.ObjectId(req.userId),
-      status: "placed",
-      deliveryDetails: checkoutSessionRequest.deliveryDetails,
-      cartItems: checkoutSessionRequest.cartItems,
-      createdAt: new Date(),
-    });
+    // Fetch the existing order by ID if provided
+    let existingOrder;
+    if (orderId) {
+      existingOrder = await Order.findById(orderId);
+    }
 
-    const lineItems = checkoutSessionRequest.cartItems.map((cartItem) => {
-      const menuItem = restaurant.menuItems.find(
-        (item) => item._id.toString() === cartItem.menuItemId.toString()
-      );
+    // Ensure the existing order is in a "confirmed" state
+    if (existingOrder && existingOrder.status !== "confirmed") {
+      return res.status(400).json({
+        message: "Order must be confirmed before proceeding to payment.",
+      });
+    }
 
-      if (!menuItem) {
-        throw new Error(`Menu item not found: ${cartItem.menuItemId}`);
-      }
+    // If no order found or ID not provided, create a new one as "placed"
+    if (!existingOrder) {
+      existingOrder = new Order({
+        restaurant: restaurant._id,
+        user: new mongoose.Types.ObjectId(req.userId),
+        status: "placed",
+        deliveryDetails,
+        cartItems,
+        createdAt: new Date(),
+      });
+      await existingOrder.save();
+    }
 
-      const menuItemPrice = Math.round(menuItem.price); // Convert price to cents.
-      return {
-        price_data: {
-          currency: "usd",
-          unit_amount: menuItemPrice,
-          product_data: {
-            name: menuItem.name,
-          },
+    // Prepare line items for Stripe
+    const lineItems = cartItems.map((item: any) => ({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: item.name,
         },
-        quantity: cartItem.quantity,
-      };
+        unit_amount: Math.round(item.price),
+      },
+      quantity: item.quantity,
+    }));
+
+    // Add delivery fee as a separate line item
+    lineItems.push({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: "Delivery Fee",
+        },
+        unit_amount: Math.round(restaurant.deliveryPrice),
+      },
+      quantity: 1,
     });
 
+    // Create a Stripe session
     const session = await STRIPE.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            display_name: "Delivery",
-            type: "fixed_amount",
-            fixed_amount: {
-              amount: Math.round(restaurant.deliveryPrice ), // Convert to cents
-              currency: "usd",
-            },
-          },
-        },
-      ],
       metadata: {
-        orderId: newOrder._id.toString(),
-        restaurantId: restaurant._id.toString(),
+        orderId: existingOrder._id.toString(),
+        restaurantId: restaurant._id?.toString() || "",
       },
-      success_url: `${FRONTEND_URL}/order-status?success=true`,
-      cancel_url: `${FRONTEND_URL}/order-status?cancelled=true`,
+      success_url: `${FRONTEND_URL}/order-status?success=true&orderId=${existingOrder._id}`,
+      cancel_url: `${FRONTEND_URL}/order-status?cancelled=true&orderId=${existingOrder._id}`,
     });
-    
 
-    await newOrder.save();
-    res.json({ url: session.url }); // Comment this out or replace it for testing.
-
+    res.json({ sessionId: session.id });
   } catch (error: any) {
     console.error("Error creating checkout session:", error);
-    res.status(500).json({ message: error.raw?.message || error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Update the export syntax
+
 export default {
   getMyOrders,
   updateOrderStatus,

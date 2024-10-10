@@ -30,6 +30,7 @@
     "express-oauth2-jwt-bearer": "^1.6.0",
     "express-validator": "^7.0.1",
     "file-type": "^19.4.1",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "leo-profanity": "^1.7.0",
     "mongodb": "^6.5.0",
