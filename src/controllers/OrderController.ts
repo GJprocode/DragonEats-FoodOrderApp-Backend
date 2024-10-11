@@ -12,23 +12,6 @@ const STRIPE = new Stripe(STRIPE_API_KEY, {
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-// type CheckoutSessionRequest = {
-//   cartItems: {
-//     menuItemId: string;
-//     name: string;
-//     quantity: number;
-//     price: number;
-//   }[];
-//   deliveryDetails: {
-//     email: string;
-//     name: string;
-//     address: string;
-//     city: string;
-//     country?: string;
-//     cellphone: string;
-//   };
-//   restaurantId: string;
-// };
 
 // Update order status
 export const updateOrderStatus = async (req: Request, res: Response) => {

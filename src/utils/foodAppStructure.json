@@ -15,6 +15,7 @@
         "MyRestaurantController.ts": "file",
         "MyUserController.ts": "file",
         "OrderController.ts": "file",
+        "orderUserController.ts": "file",
         "RestaurantController.ts": "file"
       },
       "index.ts": "file",
@@ -34,6 +35,7 @@
         "MyRestaurantRoute.ts": "file",
         "MyUserRoute.ts": "file",
         "OrderRoute.ts": "file",
+        "orderUserRoute.ts": "file",
         "RestaurantRoute.ts": "file"
       },
       "types": {
@@ -77,6 +79,7 @@
         "MyRestaurantApi.tsx": "file",
         "MyUserApi.tsx": "file",
         "OrderApi.tsx": "file",
+        "OrderUserApi.tsx": "file",
         "RestaurantApi.tsx": "file"
       },
       "AppRoutes.tsx": "file",
@@ -153,6 +156,13 @@
           "MenuItemInput.tsx": "file",
           "MenuSection.tsx": "file",
           "RestaurantImage.tsx": "file"
+        },
+        "order-forms": {
+          "OrderDetailsForm.tsx": "file",
+          "UserOrderProfileForm.tsx": "file"
+        },
+        "order-froms": {
+          "UserOrderProfileForm.tsx": "file"
         },
         "user-profile-form": {
           "UserProfileForm.tsx": "file"
