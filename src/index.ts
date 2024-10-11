@@ -10,10 +10,11 @@ import restaurantRoute from "./routes/RestaurantRoute";
 import cityRoutes from "./routes/cityRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import orderRoute from "./routes/OrderRoute";
+import orderUserRoute from "./routes/orderUserRoute"; // Import the new route
 import OrderController from "./controllers/OrderController";
 import helmet from "helmet"; // For security headers
-const app = express();
 
+const app = express();
 
 // Add global error handlers
 process.on("uncaughtException", (err) => {
@@ -24,14 +25,6 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
-
-// Log environment variables presence
-// console.log("Environment variables loaded:");
-// console.log("MONGODB_CONNECTION_STRING is defined:", !!process.env.MONGODB_CONNECTION_STRING);
-// console.log("CLOUDINARY_CLOUD_NAME is defined:", !!process.env.CLOUDINARY_CLOUD_NAME);
-// console.log("STRIPE_API_KEY is defined:", !!process.env.STRIPE_API_KEY);
-// console.log("STRIPE_WEBHOOK_SECRET is defined:", !!process.env.STRIPE_WEBHOOK_SECRET);
-// console.log("FRONTEND_URL is defined:", !!process.env.FRONTEND_URL);
 
 // Connect to MongoDB
 mongoose
@@ -82,6 +75,7 @@ app.use("/api/restaurant", restaurantRoute);
 app.use("/api/cities", cityRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/order", orderRoute);
+app.use("/api/order-user", orderUserRoute); // Register the new route
 
 app.use(
   helmet({

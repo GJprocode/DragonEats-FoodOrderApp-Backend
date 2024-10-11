@@ -158,10 +158,6 @@
           "RestaurantImage.tsx": "file"
         },
         "order-forms": {
-          "OrderDetailsForm.tsx": "file",
-          "UserOrderProfileForm.tsx": "file"
-        },
-        "order-froms": {
           "UserOrderProfileForm.tsx": "file"
         },
         "user-profile-form": {

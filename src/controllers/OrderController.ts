@@ -12,7 +12,6 @@ const STRIPE = new Stripe(STRIPE_API_KEY, {
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-
 // Update order status
 export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
@@ -58,7 +57,11 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
 
   try {
     const sig = req.headers["stripe-signature"] as string;
-    event = STRIPE.webhooks.constructEvent(req.body, sig, STRIPE_ENDPOINT_SECRET);
+    event = STRIPE.webhooks.constructEvent(
+      req.body,
+      sig,
+      STRIPE_ENDPOINT_SECRET
+    );
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -90,8 +93,6 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
 
   res.json({ received: true });
 };
-
-
 
 // Create Stripe checkout session
 export const createCheckoutSession = async (req: Request, res: Response) => {
@@ -128,8 +129,24 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         cartItems,
         createdAt: new Date(),
       });
-      await existingOrder.save();
     }
+
+    // Calculate the total amount in cents before saving the order
+    // Assuming cartItems is an array of objects where each item has 'price' and 'quantity'
+    const itemsTotal = cartItems.reduce(
+      (total: number, item: { price: number; quantity: number }) => {
+        return total + item.price * item.quantity;
+      },
+      0
+    );
+
+    const totalWithDelivery = itemsTotal + restaurant.deliveryPrice;
+
+    // Update the total amount on the order (in cents)
+    existingOrder.totalAmount = totalWithDelivery;
+
+    // Save or update the order
+    await existingOrder.save();
 
     // Prepare line items for Stripe
     const lineItems = cartItems.map((item: any) => ({
@@ -174,7 +191,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 export default {
   getMyOrders,
