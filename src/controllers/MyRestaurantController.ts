@@ -48,17 +48,27 @@ export const getAllRestaurants = async (req: Request, res: Response): Promise<vo
 // Get logged-in user's restaurant
 export const getMyRestaurant = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId; // Assuming userId is added via middleware
     if (!userId) {
       return res.status(400).json({ message: "User ID not provided" });
     }
 
+    // Find the restaurant linked to the user
     let restaurant = await Restaurant.findOne({ user: userId });
+
+    // If no restaurant exists, create a new one with default values
     if (!restaurant) {
       restaurant = new Restaurant({
         user: new mongoose.Types.ObjectId(userId),
         restaurantName: "New Restaurant",
-        branchesInfo: [],
+        branchesInfo: [
+          {
+            cities: "Default City",
+            branchName: "Default Branch",
+            latitude: 0.0,
+            longitude: 0.0,
+          },
+        ],
         country: "Default Country",
         deliveryPrice: 0,
         estimatedDeliveryTime: 0,
@@ -67,6 +77,7 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
         restaurantImageUrl: "",
         status: "submitted",
       });
+
       await restaurant.save();
     }
 
@@ -76,6 +87,7 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching restaurant" });
   }
 };
+
 
 
 // Create a new restaurant for the logged-in user

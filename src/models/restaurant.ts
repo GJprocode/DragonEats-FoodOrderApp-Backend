@@ -47,7 +47,7 @@ const RestaurantSchema = new Schema({
   restaurantName: { type: String, required: true },
   branchesInfo: [
     {
-      cities: { type: String, required: true }, // Use `cities` instead of `name`
+      cities: { type: String, required: true }, 
       branchName: { type: String, required: true },
       latitude: { type: Number, required: true },
       longitude: { type: Number, required: true },
