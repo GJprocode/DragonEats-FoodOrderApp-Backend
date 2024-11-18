@@ -45,39 +45,35 @@ export const getAllRestaurants = async (req: Request, res: Response): Promise<vo
 
 // Fetch a specific restaurant for the logged-in user
 // Controller to fetch or create restaurant
+// Get logged-in user's restaurant
 export const getMyRestaurant = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;  // Use the userId from JWT
-
+    const userId = req.userId;
     if (!userId) {
       return res.status(400).json({ message: "User ID not provided" });
     }
 
     let restaurant = await Restaurant.findOne({ user: userId });
-
     if (!restaurant) {
-      // Create a restaurant with required default fields to be able to create a restaurant for new signed up user
       restaurant = new Restaurant({
         user: new mongoose.Types.ObjectId(userId),
-        restaurantName: "New Restaurant", // Default value
-        cellphone: "+123",
-        city: ["City"], // Default value
-        country: "Country", // Default value
+        restaurantName: "New Restaurant",
+        branchesInfo: [],
+        country: "Default Country",
         deliveryPrice: 0,
         estimatedDeliveryTime: 0,
         cuisines: [],
         menuItems: [],
         restaurantImageUrl: "",
-        status: "Submitted",
-        
+        status: "submitted",
       });
       await restaurant.save();
     }
 
     res.json(restaurant);
   } catch (error) {
-    console.error("Error fetching or creating restaurant:", error);
-    res.status(500).json({ message: "Something went wrong" });
+    console.error("Error fetching restaurant:", error);
+    res.status(500).json({ message: "Error fetching restaurant" });
   }
 };
 
@@ -85,151 +81,68 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
 // Create a new restaurant for the logged-in user
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Check if a restaurant already exists for the logged-in user
-    const existingRestaurant = await Restaurant.findOne({ user: req.userId }).exec();
-    if (existingRestaurant) {
-      res.status(409).json({ message: "User restaurant already exists" });
-      return;
-    }
-
-    // Ensure user exists in the database
-    const user = await User.findById(req.userId);
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    // Create a new restaurant document
     const restaurant = new Restaurant({
       ...req.body,
-      user: new mongoose.Types.ObjectId(req.userId), // Link the user
-      email: user.email || "",
+      branchesInfo: req.body.branchesInfo.map((branch: any) => ({
+        cities: branch.cities,
+        branchName: branch.branchName,
+        latitude: branch.latitude,
+        longitude: branch.longitude,
+      })),
+      user: new mongoose.Types.ObjectId(req.userId),
+      email: req.userEmail || "",
       lastUpdated: new Date(),
-      
     });
 
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-    // Upload restaurant image if provided
-    if (files?.restaurantImageFile) {
-      const fileBuffer = files.restaurantImageFile[0].buffer;
-      await checkImageForInappropriateContent(fileBuffer);
-      restaurant.restaurantImageUrl = await uploadImage(files.restaurantImageFile[0]);
-    }
-
-    // Handle menu item images if provided
-    if (files) {
-      for (let i = 0; i < req.body.menuItems.length; i++) {
-        const field = `menuItems[${i}].menuItemImageFile`;
-        let menuItemImageUrl = req.body.menuItems[i].imageUrl;
-
-        if (files[field]) {
-          const fileBuffer = files[field][0].buffer;
-          await checkImageForInappropriateContent(fileBuffer);
-          menuItemImageUrl = await uploadImage(files[field][0]);
-        }
-
-        // Ensure that _id is set for each menu item
-        let menuItemId = req.body.menuItems[i]._id;
-        if (!menuItemId) {
-          menuItemId = new mongoose.Types.ObjectId();
-        }
-
-        restaurant.menuItems.push({
-          _id: menuItemId,
-          name: req.body.menuItems[i]?.name || "",
-          price: req.body.menuItems[i]?.price || 0,
-          imageUrl: menuItemImageUrl || "",
-        });
-      }
-    }
-
-    // Save the restaurant to the database
+    // Save the restaurant
     await restaurant.save();
     res.status(201).json(restaurant);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error("Error creating restaurant:", error.message);
-      res.status(500).json({ message: "Error creating restaurant", error: error.message });
-    } else {
-      console.error("Unexpected error creating restaurant:", error);
-      res.status(500).json({ message: "Unexpected error creating restaurant" });
-    }
+  } catch (error) {
+    console.error("Error creating restaurant:", error);
+    res.status(500).json({ message: "Error creating restaurant" });
   }
 };
 
+
+
 // Update the restaurant details for the logged-in user
-export const updateMyRestaurant = async (req: Request, res: Response): Promise<void> => {
+export const updateMyRestaurant = async (req: Request, res: Response) => {
   try {
-    const restaurant = await Restaurant.findOne({ user: req.userId }).exec();
+    const restaurant = await Restaurant.findOne({ user: req.userId });
     if (!restaurant) {
-      res.status(404).json({ message: "Restaurant not found" });
-      return;
+      return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    const user = await User.findById(req.userId);
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
+    // Update branchesInfo
+    restaurant.branchesInfo = req.body.branchesInfo.map((branch: any) => ({
+      cities: branch.cities,
+      branchName: branch.branchName,
+      latitude: branch.latitude,
+      longitude: branch.longitude,
+    }));
 
+    // Update other fields
     restaurant.restaurantName = req.body.restaurantName;
-    restaurant.city = req.body.city;
     restaurant.country = req.body.country;
     restaurant.deliveryPrice = req.body.deliveryPrice;
     restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
     restaurant.cuisines = req.body.cuisines;
     restaurant.wholesale = req.body.wholesale;
-    restaurant.email = user.email || "";
-    restaurant.lastUpdated = new Date();
     restaurant.cellphone = req.body.cellphone;
 
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-
-    if (files?.restaurantImageFile) {
-      const fileBuffer = files.restaurantImageFile[0].buffer;
-      await checkImageForInappropriateContent(fileBuffer);
-      restaurant.restaurantImageUrl = await uploadImage(files.restaurantImageFile[0]);
-    }
-
-    restaurant.menuItems = [];
-    if (files) {
-      for (let i = 0; i < req.body.menuItems.length; i++) {
-        const field = `menuItems[${i}].menuItemImageFile`;
-        let menuItemImageUrl = req.body.menuItems[i].imageUrl;
-
-        if (files[field]) {
-          const fileBuffer = files[field][0].buffer;
-          await checkImageForInappropriateContent(fileBuffer);
-          menuItemImageUrl = await uploadImage(files[field][0]);
-        }
-
-        // Ensure that _id is set for each menu item
-        let menuItemId = req.body.menuItems[i]._id;
-        if (!menuItemId) {
-          menuItemId = new mongoose.Types.ObjectId();
-        }
-
-        restaurant.menuItems.push({
-          _id: menuItemId,
-          name: req.body.menuItems[i].name || "",
-          price: req.body.menuItems[i].price || 0,
-          imageUrl: menuItemImageUrl || "",
-        });
-      }
-    }
-
+    // Save the updated restaurant
     await restaurant.save();
     res.status(200).json(restaurant);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error("Error updating restaurant:", error.message);
-      res.status(500).json({ message: "Error updating restaurant", error: error.message });
-    } else {
-      console.error("Unexpected error updating restaurant:", error);
-      res.status(500).json({ message: "Unexpected error updating restaurant" });
-    }
+  } catch (error) {
+    console.error("Error updating restaurant:", error);
+    res.status(500).json({ message: "Error updating restaurant" });
   }
 };
+
+
+
+
+
 
 // Update restaurant status (for admin use)
 export const updateRestaurantStatus = async (req: Request, res: Response): Promise<void> => {

@@ -7,7 +7,7 @@ const menuItemSchema = new Schema({
     default: () => new Types.ObjectId(),
   },
   name: { type: String, required: true },
-  price: { type: Number, required: true }, // Ensure this is Number
+  price: { type: Number, required: true },
   imageUrl: String,
 });
 
@@ -21,12 +21,17 @@ export type MenuItemType = {
 interface Restaurant extends Document {
   _id: Types.ObjectId;
   restaurantName: string;
-  city: string[];
+  branchesInfo: Array<{
+    cities: string;
+    branchName: string;
+    latitude: number;
+    longitude: number;
+  }>;
   country: string;
   deliveryPrice: number;
   estimatedDeliveryTime: number;
   cuisines: string[];
-  menuItems: MenuItemType[]; // Use MenuItemType here
+  menuItems: MenuItemType[];
   restaurantImageUrl?: string;
   status: string;
   contractType?: string;
@@ -35,12 +40,19 @@ interface Restaurant extends Document {
   user: Types.ObjectId;
   wholesale?: boolean;
   email: string;
-  cellphone?: string; // Optional cellphone field
+  cellphone?: string;
 }
 
 const RestaurantSchema = new Schema({
   restaurantName: { type: String, required: true },
-  city: [{ type: String, required: true }],
+  branchesInfo: [
+    {
+      cities: { type: String, required: true }, // Use `cities` instead of `name`
+      branchName: { type: String, required: true },
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+    },
+  ],
   country: { type: String, required: true },
   deliveryPrice: { type: Number, required: true },
   estimatedDeliveryTime: { type: Number, required: true },
@@ -54,8 +66,9 @@ const RestaurantSchema = new Schema({
   user: { type: Types.ObjectId, ref: "User", required: true },
   wholesale: { type: Boolean, default: false },
   email: { type: String, default: "" },
-  cellphone: { type: String, default: "" }, // Change to String
-
+  cellphone: { type: String, default: "" },
 });
+
+
 
 export default mongoose.model<Restaurant>("Restaurant", RestaurantSchema);
