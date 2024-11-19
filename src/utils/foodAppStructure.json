@@ -63,14 +63,13 @@
     ".swcrc": "file",
     "components.json": "file",
     "index.html": "file",
+    "manifest.json": "file",
     "package-lock.json": "file",
     "package.json": "file",
     "postcss.config.js": "file",
     "public": {
       "dragon.svg": "file",
-      "google0c43e2dd203680d9.html": "file",
-      "react.svg": "file",
-      "vite.svg": "file"
+      "google0c43e2dd203680d9.html": "file"
     },
     "README.md": "file",
     "src": {
@@ -158,6 +157,9 @@
           "RestaurantImage.tsx": "file"
         },
         "order-forms": {
+          "UserOrderProfileForm.tsx": "file"
+        },
+        "order-froms": {
           "UserOrderProfileForm.tsx": "file"
         },
         "user-profile-form": {

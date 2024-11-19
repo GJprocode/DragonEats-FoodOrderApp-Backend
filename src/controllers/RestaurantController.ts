@@ -1,5 +1,5 @@
+// src/controllers/RestaurantController.ts
 
-// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\RestaurantController.ts
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 
@@ -7,16 +7,17 @@ import Restaurant from "../models/restaurant";
 export const searchRestaurant = async (req: Request, res: Response) => {
   try {
     const city = req.params.city;
+
     const searchQuery = (req.query.searchQuery as string) || "";
     const selectedCuisines = (req.query.selectedCuisines as string) || "";
-    const selectedBusinessType = (req.query.selectedBusinessType as string) || "";
+    const selectedBusinessType =
+      (req.query.selectedBusinessType as string) || "";
     const sortOption = (req.query.sortOption as string) || "lastUpdated";
     const page = parseInt(req.query.page as string) || 1;
 
-    // Query to match restaurants in the given city with status "approved"
-    let query: any = {
-      city: { $regex: new RegExp(city, "i") },
-      status: "approved", // Filter to return only approved restaurants
+    const query: any = {
+      status: "approved",
+      "branchesInfo.cities": { $regex: new RegExp(`^${city}$`, "i") }, // Add city condition here
     };
 
     if (selectedBusinessType) {
@@ -24,7 +25,9 @@ export const searchRestaurant = async (req: Request, res: Response) => {
     }
 
     if (selectedCuisines) {
-      const cuisinesArray = selectedCuisines.split(",").map((cuisine) => new RegExp(cuisine, "i"));
+      const cuisinesArray = selectedCuisines
+        .split(",")
+        .map((cuisine) => new RegExp(cuisine, "i"));
       query["cuisines"] = { $all: cuisinesArray };
     }
 
@@ -39,22 +42,54 @@ export const searchRestaurant = async (req: Request, res: Response) => {
     const pageSize = 10;
     const skip = (page - 1) * pageSize;
 
-    // Fetch only approved restaurants from the database
+    // Fetch restaurants with pagination
     const restaurants = await Restaurant.find(query)
       .sort({ [sortOption]: 1 })
       .skip(skip)
       .limit(pageSize)
       .lean();
 
-    const total = await Restaurant.countDocuments(query);
+    // Compute total number of restaurants matching the query
+    const totalRestaurants = await Restaurant.countDocuments(query);
 
-    // Return the filtered restaurants with pagination
+    // Filter branches matching the city
+    const resultsWithBranches = restaurants.map((restaurant) => ({
+      ...restaurant,
+      branches: restaurant.branchesInfo.filter(
+        (branch) => branch.cities.toLowerCase() === city.toLowerCase()
+      ),
+    }));
+
+    // Remove restaurants with no branches in the city
+    const filteredRestaurants = resultsWithBranches.filter(
+      (restaurant) => restaurant.branches.length > 0
+    );
+
+    // Compute total number of branches matching the city and filters
+    const totalBranchesResult = await Restaurant.aggregate([
+      { $match: query },
+      { $unwind: "$branchesInfo" },
+      {
+        $match: {
+          "branchesInfo.cities": { $regex: new RegExp(`^${city}$`, "i") },
+        },
+      },
+      { $count: "totalBranches" },
+    ]);
+
+    const totalBranches =
+      totalBranchesResult.length > 0
+        ? totalBranchesResult[0].totalBranches
+        : 0;
+
+    // Include totalBranches in your response
     res.json({
-      data: restaurants,
+      data: filteredRestaurants,
       pagination: {
-        total,
+        totalRestaurants: filteredRestaurants.length,
+        totalBranches,
         page,
-        pages: Math.ceil(total / pageSize),
+        pages: Math.ceil(totalRestaurants / pageSize),
       },
     });
   } catch (error) {
@@ -66,11 +101,18 @@ export const searchRestaurant = async (req: Request, res: Response) => {
 // Function to get all distinct cities that have approved restaurants
 export const getCities = async (req: Request, res: Response) => {
   try {
-    // Fetch distinct cities from only approved restaurants
-    const cities = await Restaurant.distinct("city", { status: "approved" });
-    res.json(cities);
+    const cities = await Restaurant.aggregate([
+      { $match: { status: "approved" } },
+      { $unwind: "$branchesInfo" },
+      { $group: { _id: "$branchesInfo.cities" } },
+      { $project: { city: "$_id" } },
+    ]);
+
+    const distinctCities = cities.map((city: { city: string }) => city.city);
+
+    res.json(distinctCities);
   } catch (error) {
-    console.error("Error fetching approved cities:", error);
+    console.error("Error fetching cities:", error);
     res.status(500).json({ message: "Error fetching approved cities" });
   }
 };
