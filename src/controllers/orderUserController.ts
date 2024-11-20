@@ -32,3 +32,20 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Error updating order details', error });
     }
   };
+
+  export const getOrderDetails = async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      const order = await Order.findById(orderId).populate("restaurant user");
+  
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+  
+      res.status(200).json(order);
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      res.status(500).json({ message: "Unable to fetch order details" });
+    }
+  };
+  

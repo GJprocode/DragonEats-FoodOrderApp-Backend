@@ -27,7 +27,7 @@ export const validateMyUserRequest = [
   handleValidationErrors,
 ];
 
-// Validation for restaurant creation/update (if not cerate a vale in )
+// Validation for restaurant creation/update 
 // Validation for restaurant creation/update
 export const validateMyRestaurantRequest = [
   body("restaurantName")
