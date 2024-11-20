@@ -70,10 +70,10 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
           },
         ],
         country: "Default Country",
-        deliveryPrice: 0,
+        deliveryPrice: 2000, // Default as cents ($20.00)
         estimatedDeliveryTime: 0,
         cuisines: [],
-        menuItems: [],
+        menuItems: [], // Ensure empty menuItems array is created
         restaurantImageUrl: "",
         status: "submitted",
       });
@@ -81,7 +81,19 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
       await restaurant.save();
     }
 
-    res.json(restaurant);
+    // Format `menuItems` properly
+    const formattedRestaurant = {
+      ...restaurant.toObject(),
+      deliveryPrice: restaurant.deliveryPrice / 100, // Convert delivery price to dollars
+      menuItems: restaurant.menuItems.map((menuItem) => ({
+        ...menuItem,
+        name: menuItem.name || "Unnamed Item", // Fallback for missing names
+        price: menuItem.price / 100, // Convert menu item prices to dollars
+        imageUrl: menuItem.imageUrl || "/path/to/placeholder-image.jpg", // Fallback for missing image URLs
+      })),
+    };
+
+    res.json(formattedRestaurant);
   } catch (error) {
     console.error("Error fetching restaurant:", error);
     res.status(500).json({ message: "Error fetching restaurant" });
@@ -90,11 +102,17 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
 
 
 
+
+
+
+
+
 // Create a new restaurant for the logged-in user
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurant = new Restaurant({
       ...req.body,
+      deliveryPrice: Math.round(req.body.deliveryPrice * 100), // Convert to cents
       branchesInfo: req.body.branchesInfo.map((branch: any) => ({
         cities: branch.cities,
         branchName: branch.branchName,
@@ -106,7 +124,6 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
       lastUpdated: new Date(),
     });
 
-    // Save the restaurant
     await restaurant.save();
     res.status(201).json(restaurant);
   } catch (error) {
@@ -115,9 +132,6 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
   }
 };
 
-
-
-// Update the restaurant details for the logged-in user
 export const updateMyRestaurant = async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne({ user: req.userId });
@@ -125,24 +139,15 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    // Update branchesInfo
-    restaurant.branchesInfo = req.body.branchesInfo.map((branch: any) => ({
-      cities: branch.cities,
-      branchName: branch.branchName,
-      latitude: branch.latitude,
-      longitude: branch.longitude,
-    }));
-
-    // Update other fields
+    // Update the delivery price and other fields
+    restaurant.deliveryPrice = Math.round(req.body.deliveryPrice * 100); // Convert to cents
+    restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
     restaurant.restaurantName = req.body.restaurantName;
     restaurant.country = req.body.country;
-    restaurant.deliveryPrice = req.body.deliveryPrice;
-    restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
     restaurant.cuisines = req.body.cuisines;
     restaurant.wholesale = req.body.wholesale;
     restaurant.cellphone = req.body.cellphone;
 
-    // Save the updated restaurant
     await restaurant.save();
     res.status(200).json(restaurant);
   } catch (error) {
@@ -150,6 +155,7 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error updating restaurant" });
   }
 };
+
 
 
 
@@ -262,4 +268,5 @@ export default {
   getMyRestaurant,
   createMyRestaurant,
   updateMyRestaurant,
+  uploadImage,
 };
