@@ -1,0 +1,198 @@
+{
+  ".hintrc": "file",
+  ".vscode": {
+    "settings.json": "file"
+  },
+  "backend": {
+    ".env": "file",
+    ".gitignore": "file",
+    "package-lock.json": "file",
+    "package.json": "file",
+    "README.md": "file",
+    "src": {
+      "controllers": {
+        "AdminActionsController.ts": "file",
+        "MyRestaurantController.ts": "file",
+        "MyUserController.ts": "file",
+        "OrderController.ts": "file",
+        "orderUserController.ts": "file",
+        "RestaurantController.ts": "file"
+      },
+      "index.ts": "file",
+      "middleware": {
+        "auth.ts": "file",
+        "validation.ts": "file"
+      },
+      "models": {
+        "admin.ts": "file",
+        "order.ts": "file",
+        "restaurant.ts": "file",
+        "user.ts": "file"
+      },
+      "routes": {
+        "adminRoutes.ts": "file",
+        "cityRoutes.ts": "file",
+        "MyRestaurantRoute.ts": "file",
+        "MyUserRoute.ts": "file",
+        "OrderRoute.ts": "file",
+        "orderUserRoute.ts": "file",
+        "RestaurantRoute.ts": "file"
+      },
+      "types": {
+        "clamav.js.d.ts": "file",
+        "express.d.ts": "file",
+        "leo-profanity.d.ts": "file"
+      },
+      "utils": {
+        "cloudinaryMongoDBImageClean.ts": "file",
+        "finalCloudinaryImages.json": "file",
+        "finalMongoDBImages.json": "file",
+        "imageModerator.ts": "file",
+        "printStructure.ts": "file",
+        "textFilter.ts": "file",
+        "whitelistadd.ts": "file"
+      }
+    },
+    "tsconfig.json": "file"
+  },
+  "frontend": {
+    ".env": "file",
+    ".eslintrc.cjs": "file",
+    ".gitignore": "file",
+    ".swcrc": "file",
+    "components.json": "file",
+    "index.html": "file",
+    "manifest.json": "file",
+    "package-lock.json": "file",
+    "package.json": "file",
+    "postcss.config.js": "file",
+    "public": {
+      "dragon.svg": "file",
+      "google0c43e2dd203680d9.html": "file"
+    },
+    "README.md": "file",
+    "src": {
+      "api": {
+        "AdminPanelApi.tsx": "file",
+        "MyRestaurantApi.tsx": "file",
+        "MyUserApi.tsx": "file",
+        "OrderApi.tsx": "file",
+        "OrderUserApi.tsx": "file",
+        "RestaurantApi.tsx": "file"
+      },
+      "AppRoutes.tsx": "file",
+      "assets": {
+        "AppleStore.png": "file",
+        "CellApp.png": "file",
+        "food.png": "file",
+        "GooglePlay.png": "file"
+      },
+      "auth": {
+        "Auth0ProviderWithNavigate.tsx": "file",
+        "ProtectedRoute.tsx": "file"
+      },
+      "components": {
+        "BusinessTypeFilter.tsx": "file",
+        "CheckoutButton.tsx": "file",
+        "CuisineFilter.tsx": "file",
+        "Footer.tsx": "file",
+        "header.tsx": "file",
+        "LoadingButton.tsx": "file",
+        "MainNav.tsx": "file",
+        "MainPic.tsx": "file",
+        "MenuItem.tsx": "file",
+        "MobileNav.tsx": "file",
+        "MobileNavLinks.tsx": "file",
+        "OrderItemCard.tsx": "file",
+        "OrderStatusHeader.tsx": "file",
+        "OrderSummary.tsx": "file",
+        "PaginationSelector.tsx": "file",
+        "RestaurantDetails.tsx": "file",
+        "RestaurantInfo.tsx": "file",
+        "SearchBar.tsx": "file",
+        "SearchResultCard.tsx": "file",
+        "SearchResultInfo.tsx": "file",
+        "SortOptionDropdown.tsx": "file",
+        "ui": {
+          "aspect-ratio.tsx": "file",
+          "badge.tsx": "file",
+          "button.tsx": "file",
+          "card.tsx": "file",
+          "checkbox.tsx": "file",
+          "ConsentBanner.tsx": "file",
+          "cookiesUtils.tsx": "file",
+          "dialog.tsx": "file",
+          "dropdown-menu.tsx": "file",
+          "form.tsx": "file",
+          "input.tsx": "file",
+          "label.tsx": "file",
+          "LoadingSpinner.tsx": "file",
+          "pagination.tsx": "file",
+          "progress.tsx": "file",
+          "RejectOrderDialog.tsx": "file",
+          "select.tsx": "file",
+          "separator.tsx": "file",
+          "sheet.tsx": "file",
+          "sonner.tsx": "file",
+          "tabs.tsx": "file",
+          "textarea.tsx": "file",
+          "UsernameMenu.tsx": "file"
+        }
+      },
+      "config": {
+        "order-status-config.ts": "file",
+        "restaurant-options-config.ts": "file"
+      },
+      "custom.d.ts": "file",
+      "forms": {
+        "admin-action-form": {
+          "AdminActionForm.tsx": "file"
+        },
+        "manage-restaurant-form": {
+          "CuisineCheckbox.tsx": "file",
+          "CuisinesSection.tsx": "file",
+          "DetailsSection.tsx": "file",
+          "ManageRestaurantForm.tsx": "file",
+          "MenuItemInput.tsx": "file",
+          "MenuSection.tsx": "file",
+          "RestaurantImage.tsx": "file"
+        },
+        "order-forms": {
+          "UserOrderProfileForm.tsx": "file"
+        },
+        "user-profile-form": {
+          "UserProfileForm.tsx": "file"
+        }
+      },
+      "global.css": "file",
+      "layouts": {
+        "layout.tsx": "file"
+      },
+      "lib": {
+        "PriceFormatter.ts": "file",
+        "utils.ts": "file"
+      },
+      "main.tsx": "file",
+      "pages": {
+        "AdminPanelPage.tsx": "file",
+        "AuthCallbackPage.tsx": "file",
+        "DetailPage.tsx": "file",
+        "HomePage.tsx": "file",
+        "ManageRestaurantPage.tsx": "file",
+        "OrderStatusDetail.tsx": "file",
+        "OrderStatusPage.tsx": "file",
+        "PrivacyPolicy.tsx": "file",
+        "SearchPage.tsx": "file",
+        "SignUpPage.tsx": "file",
+        "TermsOfService.tsx": "file",
+        "UserProfilePage.tsx": "file"
+      },
+      "types.ts": "file",
+      "vite-env.d.ts": "file"
+    },
+    "tailwind.config.js": "file",
+    "tsconfig.json": "file",
+    "tsconfig.node.json": "file",
+    "vite.config.ts": "file"
+  }
+}
