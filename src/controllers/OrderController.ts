@@ -124,6 +124,8 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
   res.json({ received: true });
 };
 
+
+
 // Create Stripe checkout session
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
