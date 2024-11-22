@@ -108,7 +108,9 @@ export const getCities = async (req: Request, res: Response) => {
       { $project: { city: "$_id" } },
     ]);
 
-    const distinctCities = cities.map((city: { city: string }) => city.city);
+    const distinctCities = cities
+      .map((city: { city: string }) => city.city)
+      .sort((a, b) => a.localeCompare(b)); // Alphabetical sorting
 
     res.json(distinctCities);
   } catch (error) {
@@ -116,6 +118,7 @@ export const getCities = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching approved cities" });
   }
 };
+
 
 const getRestaurant = async (req: Request, res: Response) => {
   try {

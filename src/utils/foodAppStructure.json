@@ -45,8 +45,7 @@
       },
       "utils": {
         "cloudinaryMongoDBImageClean.ts": "file",
-        "finalCloudinaryImages.json": "file",
-        "finalMongoDBImages.json": "file",
+        "foodAppStructure.json": "file",
         "imageModerator.ts": "file",
         "printStructure.ts": "file",
         "textFilter.ts": "file",
