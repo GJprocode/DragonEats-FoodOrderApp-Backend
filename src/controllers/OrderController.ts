@@ -14,55 +14,103 @@ const STRIPE = new Stripe(STRIPE_API_KEY, {
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-// Update order status
+
+// backend/src/controllers/orderController.ts
 export const updateOrderStatus = async (req: Request, res: Response) => {
   const { orderId } = req.params;
   const { status, message } = req.body;
 
   try {
+    console.log("Received request to update order:", { orderId, status, message });
+
     const order = await Order.findById(orderId);
 
     if (!order) {
+      console.log("Order not found for ID:", orderId);
       return res.status(404).json({ error: "Order not found" });
     }
+
+    console.log("Current order status:", order.status);
 
     // Define valid transitions
     const validTransitions: Record<string, string[]> = {
       placed: ["confirmed", "rejected"],
-      confirmed: ["paid", "rejected"],
+      confirmed: ["rejected"],
       paid: ["inProgress", "rejected"],
       inProgress: ["outForDelivery", "rejected"],
       outForDelivery: ["delivered", "rejected"],
+      delivered: [],
       rejected: ["resolved"],
+      resolved: [],
     };
 
     // Validate transition
     if (!validTransitions[order.status]?.includes(status)) {
-      return res.status(400).json({ error: "Invalid status transition" });
+      console.log(`Invalid status transition from ${order.status} to ${status}`);
+      return res.status(400).json({
+        error: `Invalid transition from ${order.status} to ${status}`,
+      });
     }
 
-    // Handle rejection and resolution
-    if (["rejected", "resolved"].includes(status)) {
-      if (!message) {
-        return res.status(400).json({ error: "Message is required for rejection or resolution." });
+    // Define default messages
+    const defaultMessages = {
+      rejected: {
+        beforePay: "Out of stock, dragons flying to get ingredients.",
+        afterPay: "Refund pending.",
+      },
+      resolved: {
+        beforePay: "Order cancelled due to stock issues and dragons' wings.",
+        afterPay: "Underground dragons refunded successfully.",
+      },
+    };
+
+    // Determine message context
+    const isBeforePay = ["placed", "confirmed"].includes(order.status);
+    let finalMessage = message;
+
+    if (!finalMessage) {
+      if (status === "rejected") {
+        finalMessage = isBeforePay
+          ? defaultMessages.rejected.beforePay
+          : defaultMessages.rejected.afterPay;
+      } else if (status === "resolved") {
+        finalMessage = isBeforePay
+          ? defaultMessages.resolved.beforePay
+          : defaultMessages.resolved.afterPay;
       }
-      order.messages.push({ status, message, timestamp: new Date() });
-      order.rejectionMessage = message;
     }
 
-    // Update status and delivery date if delivered
-    order.status = status;
-    if (status === "delivered") {
-      order.dateDelivered = new Date();
+    console.log("Final message to save:", finalMessage);
+
+    // Append message if rejection or resolution
+    if (status === "rejected" || status === "resolved") {
+      console.log("Appending message to order:", {
+        status,
+        message: finalMessage,
+        timestamp: new Date(),
+      });
+      order.messages.push({
+        status,
+        message: finalMessage,
+        timestamp: new Date(),
+      });
     }
+
+    // Update the status
+    order.status = status;
+    console.log("Updating order status to:", status);
 
     await order.save();
+    console.log("Order updated successfully:", order);
+
     res.status(200).json(order);
   } catch (error) {
-    console.error("Failed to update order:", error);
-    res.status(500).json({ error: "Failed to update order" });
+    console.error("Failed to update order status:", error);
+    res.status(500).json({ error: "Failed to update order status" });
   }
 };
+
+
 
 
 
