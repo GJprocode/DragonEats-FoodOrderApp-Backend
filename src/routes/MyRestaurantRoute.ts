@@ -28,8 +28,9 @@ router.patch(
   "/order/:orderId/status",
   jwtCheck,
   jwtParse,
-  MyRestaurantController.updateOrderStatus
+  MyRestaurantController.updateRestaurantOrderStatus
 );
+
 
 
 const menuItemsFields = Array.from({ length: 40 }, (_, i) => ({

@@ -13,7 +13,8 @@ router.use(jwtCheck, jwtParse);
 router.get("/", OrderController.getMyOrders);
 
 // Update order status
-router.patch("/order/:orderId/status", OrderController.updateOrderStatus);
+router.patch("/order/:orderId/status", OrderController.updateUserOrderStatus);
+
 
 // Create checkout session
 router.post("/checkout/create-checkout-session", OrderController.createCheckoutSession);

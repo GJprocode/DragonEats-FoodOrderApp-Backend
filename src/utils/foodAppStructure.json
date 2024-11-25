@@ -128,7 +128,6 @@
           "LoadingSpinner.tsx": "file",
           "pagination.tsx": "file",
           "progress.tsx": "file",
-          "RejectOrderDialog.tsx": "file",
           "select.tsx": "file",
           "separator.tsx": "file",
           "sheet.tsx": "file",

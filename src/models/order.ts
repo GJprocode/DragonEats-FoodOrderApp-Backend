@@ -1,27 +1,22 @@
 // C:\Users\gertf\Desktop\FoodApp\backend\src\models\order.ts
 
+// C:\Users\gertf\Desktop\FoodApp\backend\src\models\order.ts
+
 import mongoose from "mongoose";
+
 
 const orderSchema = new mongoose.Schema(
   {
-    restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    deliveryDetails: {
-      email: { type: String, required: true },
-      name: { type: String, required: true },
-      address: { type: String, required: true },
-      city: { type: String, required: true },
-      cellphone: { type: String, required: true },
+    restaurant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+      required: true, // Ensures every order is linked to a restaurant
     },
-    cartItems: [
-      {
-        menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem", required: true },
-        quantity: { type: Number, required: true },
-        name: { type: String, required: true },
-        price: { type: Number, required: true },
-      },
-    ],
-    totalAmount: { type: Number, default: 0 },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true, // Ensures every order is linked to a user
+    },
     status: {
       type: String,
       enum: [
@@ -36,24 +31,42 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "placed",
     },
-    rejectionMessage: { type: String, default: "" },
-    resolutionMessage: { type: String, default: "" },
-    messages: {
-      type: [
-        {
-          status: { type: String, enum: ["rejected", "resolved"], required: true },
-          message: { type: String, required: true },
-          timestamp: { type: Date, default: Date.now },
-        },
-      ],
-      default: [], // Ensure it initializes as an empty array
+    rejectionMessage: {
+      message: { type: String, default: "" },
+      timestamp: { type: Date, default: null },
     },
-    dateDelivered: { type: Date },
+    resolutionMessage: {
+      message: { type: String, default: "" },
+      timestamp: { type: Date, default: null },
+    },
+    dateDelivered: { type: Date, default: null },
+    totalAmount: {
+      type: Number,
+      required: true,
+      default: 0, // Ensures it's always defined
+    },
+    cartItems: [
+      {
+        menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem", required: true },
+        name: { type: String, required: true },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true }, // Store price in cents for consistency
+      },
+    ],
+    deliveryDetails: {
+      name: { type: String, required: true },
+      address: { type: String, required: true },
+      city: { type: String, required: true },
+      email: { type: String, required: true },
+      cellphone: { type: String, required: true },
+    },
   },
-  { timestamps: true }
+  { timestamps: true } // Automatically adds `createdAt` and `updatedAt` fields
 );
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;
+
+
 
 

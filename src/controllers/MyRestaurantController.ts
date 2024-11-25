@@ -229,32 +229,68 @@ const getMyRestaurantOrders = async (req: Request, res: Response) => {
 };
 
 
-const updateOrderStatus = async (req: Request, res: Response) => {
-  try {
-    const { orderId } = req.params;
-    const { status } = req.body;
+// Update restaurant order status
+export const updateRestaurantOrderStatus = async (req: Request, res: Response) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
 
-    const order = await Order.findById(orderId);
+  try {
+    const order = await Order.findById(orderId).populate("restaurant").populate("user");
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
     const restaurant = await Restaurant.findById(order.restaurant);
-    if (restaurant?.user?._id.toString() !== req.userId) {
-      return res.status(401).send();
+    if (!restaurant || restaurant.user.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized to update this order" });
     }
 
-    // Update the order status and set dateDelivered if the status is 'delivered'
-    order.status = status;
-    if (status === "delivered") {
-      order.dateDelivered = new Date(); // Set the current date and time for delivery
+    // Define valid transitions
+    const validTransitions: Record<string, string[]> = {
+      placed: ["confirmed", "rejected"],
+      confirmed: ["rejected"],
+      paid: ["inProgress", "rejected"],
+      inProgress: ["outForDelivery", "rejected"],
+      outForDelivery: ["delivered", "rejected"],
+      delivered: [],
+      rejected: ["resolved"],
+      resolved: [],
+    };
+
+    if (!validTransitions[order.status]?.includes(status)) {
+      return res.status(400).json({ message: `Invalid transition from ${order.status} to ${status}` });
     }
+
+    // Handle rejected messages
+    if (status === "rejected") {
+      order.rejectionMessage = {
+        message: ["placed", "confirmed"].includes(order.status)
+          ? "Out of stock, dragons flying to get ingredients."
+          : "Refund pending.",
+        timestamp: new Date(),
+      };
+    }
+
+    // Handle resolved messages
+    if (status === "resolved") {
+      const isBeforePay = order.rejectionMessage?.message === "Out of stock, dragons flying to get ingredients.";
+
+      order.resolutionMessage = {
+        message: isBeforePay
+          ? "Order resolved before payment, no refund needed."
+          : "Order resolved after payment, refund paid.",
+        timestamp: new Date(),
+      };
+    }
+
+    // Update the status
+    order.status = status;
     await order.save();
 
     res.status(200).json(order);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Unable to update order status" });
+    console.error("Error updating restaurant order status:", error);
+    res.status(500).json({ message: "Failed to update restaurant order status" });
   }
 };
 
@@ -262,8 +298,11 @@ const updateOrderStatus = async (req: Request, res: Response) => {
 
 
 
+
+
+
 export default {
-  updateOrderStatus,
+  updateRestaurantOrderStatus,
   getMyRestaurantOrders,
   getMyRestaurant,
   createMyRestaurant,
