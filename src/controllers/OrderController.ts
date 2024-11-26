@@ -253,6 +253,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   }
 };
 
+// updateUserOrderStatus separated from Restaurant
+
 export default {
   updateUserOrderStatus,
   getMyOrders,
