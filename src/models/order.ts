@@ -1,21 +1,26 @@
 // C:\Users\gertf\Desktop\FoodApp\backend\src\models\order.ts
 
-// C:\Users\gertf\Desktop\FoodApp\backend\src\models\order.ts
-
 import mongoose from "mongoose";
-
 
 const orderSchema = new mongoose.Schema(
   {
     restaurant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Restaurant",
-      required: true, // Ensures every order is linked to a restaurant
+      required: true,
     },
+    restaurantName: { type: String, required: true },
+    branchDetails: {
+      branchName: { type: String, required: true },
+      city: { type: String, required: true },
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+    },
+    businessType: { type: Boolean, required: true, default: false }, // False: Restaurant, True: Wholesale
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true, // Ensures every order is linked to a user
+      required: true,
     },
     status: {
       type: String,
@@ -31,26 +36,12 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "placed",
     },
-    rejectionMessage: {
-      message: { type: String, default: "" },
-      timestamp: { type: Date, default: null },
-    },
-    resolutionMessage: {
-      message: { type: String, default: "" },
-      timestamp: { type: Date, default: null },
-    },
-    dateDelivered: { type: Date, default: null },
-    totalAmount: {
-      type: Number,
-      required: true,
-      default: 0, // Ensures it's always defined
-    },
     cartItems: [
       {
         menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem", required: true },
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
-        price: { type: Number, required: true }, // Store price in cents for consistency
+        price: { type: Number, required: true },
       },
     ],
     deliveryDetails: {
@@ -60,8 +51,15 @@ const orderSchema = new mongoose.Schema(
       email: { type: String, required: true },
       cellphone: { type: String, required: true },
     },
+    totalAmount: { type: Number, required: true, default: 0 },
+    paymentType: { type: String, default: "Stripe" }, // Default to Stripe
+    paymentTransactionId: { type: String }, // To store payment provider transaction ID
+    dateDelivered: { type: Date, default: null },
+    dateResolved: { type: Date, default: null },
+    rejectionMessage: { message: { type: String }, timestamp: { type: Date } },
+    resolutionMessage: { message: { type: String }, timestamp: { type: Date } },
   },
-  { timestamps: true } // Automatically adds `createdAt` and `updatedAt` fields
+  { timestamps: true }
 );
 
 const Order = mongoose.model("Order", orderSchema);
