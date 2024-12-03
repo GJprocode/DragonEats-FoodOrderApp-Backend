@@ -1,0 +1,28 @@
+//C:\Users\gertf\Desktop\FoodApp\backend\tsconfig.json
+
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+
+    /* Language and Environment */
+    "target": "es2016",  /* Set the JavaScript language version for emitted JavaScript */
+
+    /* Modules */
+    "module": "commonjs",  /* Specify what module code is generated */
+
+    /* Interop Constraints */
+    "esModuleInterop": true,  /* Emit additional JavaScript to ease support for importing CommonJS modules */
+    "forceConsistentCasingInFileNames": true,  /* Ensure that casing is correct in imports */
+
+    /* Type Checking */
+    "strict": true,  /* Enable all strict type-checking options */
+    "skipLibCheck": true  /* Skip type checking all .d.ts files */
+  },
+
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",  // Use "src/**/*.d.ts" to ensure all .d.ts files in your src folder are included
+    "types/**/*.d.ts" // Include the express.d.ts file
+  ]
+}
