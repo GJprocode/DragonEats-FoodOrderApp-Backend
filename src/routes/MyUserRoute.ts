@@ -7,9 +7,17 @@ import { validateMyUserRequest } from "../middleware/validation";
 
 const router = express.Router();
 
+// Route to get the current logged-in user
 router.get("/", jwtCheck, jwtParse, MyUserController.getCurrentUser);
+
+// Route to create a new user
 router.post("/", jwtCheck, MyUserController.createCurrentUser);
+
+// Route to update user details
 router.put("/", jwtCheck, jwtParse, validateMyUserRequest, MyUserController.updateMyUser);
- // Protected
+
+// Route to handle geolocation prompts and updates
+router.post("/location", jwtCheck,  jwtParse, MyUserController.promptForLocation);
+
 
 export default router;

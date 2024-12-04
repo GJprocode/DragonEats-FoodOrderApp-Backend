@@ -2,12 +2,21 @@
 
 import { Request } from "express";
 
+import "express-session";
+
+declare module "express-session" {
+  interface SessionData {
+    userLocation?: { latitude: number; longitude: number }; // Add userLocation to session
+  }
+}
+
 declare global {
   namespace Express {
     interface Request {
-      userId?: string;   // MongoDB _id of the user (linked to the restaurants collection)
-      userEmail?: string; // User's email for convenience
-      auth0Id?: string;   // Auth0 ID, if you need it for specific operations
+      userId?: string; // MongoDB _id of the user
+      userEmail?: string; // User's email
+      auth0Id?: string; // Auth0 ID
     }
   }
 }
+

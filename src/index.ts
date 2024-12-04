@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import "dotenv/config";
 import mongoose from "mongoose";
+import session from "express-session";
 import myUserRoute from "./routes/MyUserRoute";
 import { v2 as cloudinary } from "cloudinary";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
@@ -10,9 +11,9 @@ import restaurantRoute from "./routes/RestaurantRoute";
 import cityRoutes from "./routes/cityRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import orderRoute from "./routes/OrderRoute";
-import orderUserRoute from "./routes/orderUserRoute"; // Import the new route
+import orderUserRoute from "./routes/orderUserRoute";
 import OrderController from "./controllers/OrderController";
-import helmet from "helmet"; // For security headers
+import helmet from "helmet";
 
 const app = express();
 
@@ -53,6 +54,19 @@ app.use(
   })
 );
 
+// Session configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    },
+  })
+);
+
 // Define the webhook route before body parsers
 app.post(
   "/api/order/checkout/webhook",
@@ -75,7 +89,10 @@ app.use("/api/restaurant", restaurantRoute);
 app.use("/api/cities", cityRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/order", orderRoute);
-app.use("/api/order-user", orderUserRoute); // Register the new route
+app.use("/api/order-user", orderUserRoute);
+
+
+
 
 app.use(
   helmet({
