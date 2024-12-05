@@ -6,6 +6,7 @@
   "backend": {
     ".env": "file",
     ".gitignore": "file",
+    "eslint.config.mjs": "file",
     "package-lock.json": "file",
     "package.json": "file",
     "README.md": "file",
@@ -41,6 +42,7 @@
       "types": {
         "clamav.js.d.ts": "file",
         "express.d.ts": "file",
+        "file-type.d.ts": "file",
         "leo-profanity.d.ts": "file"
       },
       "utils": {
@@ -60,14 +62,23 @@
     ".gitignore": "file",
     ".swcrc": "file",
     "components.json": "file",
+    "eslint.config.js": "file",
+    "eslint.config.mjs": "file",
     "index.html": "file",
     "manifest.json": "file",
     "package-lock.json": "file",
     "package.json": "file",
     "postcss.config.js": "file",
     "public": {
+      "apple-touch-icon.png": "file",
       "dragon.svg": "file",
-      "google0c43e2dd203680d9.html": "file"
+      "favicon-96x96.png": "file",
+      "favicon.ico": "file",
+      "favicon.svg": "file",
+      "google0c43e2dd203680d9.html": "file",
+      "site.webmanifest": "file",
+      "web-app-manifest-192x192.png": "file",
+      "web-app-manifest-512x512.png": "file"
     },
     "README.md": "file",
     "src": {
@@ -106,6 +117,7 @@
         "OrderStatusHeader.tsx": "file",
         "OrderSummary.tsx": "file",
         "PaginationSelector.tsx": "file",
+        "PriceDeliveryComponent.tsx": "file",
         "RestaurantDetails.tsx": "file",
         "RestaurantInfo.tsx": "file",
         "SearchBar.tsx": "file",
@@ -138,6 +150,7 @@
         }
       },
       "config": {
+        "messages.ts": "file",
         "order-status-config.ts": "file",
         "restaurant-options-config.ts": "file"
       },
@@ -167,6 +180,8 @@
         "layout.tsx": "file"
       },
       "lib": {
+        "deliveryPricing.ts": "file",
+        "deliveryUtils.ts": "file",
         "PriceFormatter.ts": "file",
         "utils.ts": "file"
       },

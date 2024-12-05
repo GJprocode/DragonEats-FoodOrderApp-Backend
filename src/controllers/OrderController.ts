@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY as string;
 const STRIPE = new Stripe(STRIPE_API_KEY, {
-  apiVersion: "2024-09-30.acacia",
+  apiVersion: "2024-11-20.acacia",
 });
 
 const FRONTEND_URL = process.env.FRONTEND_URL as string;

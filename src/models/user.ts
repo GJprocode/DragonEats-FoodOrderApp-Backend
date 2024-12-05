@@ -1,26 +1,17 @@
-//  C:\Users\gertf\Desktop\FoodApp\backend\src\models\user.ts
+// src/models/user.ts
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  auth0Id: {
-    type: [String], // Store multiple auth0Ids
-    required: true
-  },
-  email: {
-    type: String,
-    unique: true, // Ensure email uniqueness
-    required: true
-  },
+  auth0Id: { type: [String], required: true },
+  email: { type: String, unique: true, required: true },
   name: String,
   address: String,
   city: String,
   country: String,
-  cellphone: { type: String }, 
-  role: {
-    type: String,
-    default: "user" // Default role is 'user'
-  }
+  cellphone: String,
+  role: { type: String, default: "user" },
+  userLocation: { type: [Number], default: [] }, // Latitude and longitude array
 });
 
 const User = mongoose.model("User", userSchema);
