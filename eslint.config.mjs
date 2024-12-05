@@ -1,3 +1,5 @@
+// C:\Users\gertf\Desktop\FoodApp\backend\eslint.config.mjs
+
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";

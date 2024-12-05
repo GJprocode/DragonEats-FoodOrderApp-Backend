@@ -1,12 +1,8 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\types\express.d.ts
-
-import { Request } from "express";
-
 import "express-session";
 
 declare module "express-session" {
   interface SessionData {
-    userLocation?: { latitude: number; longitude: number }; // Add userLocation to session
+    userLocation?: { latitude: number; longitude: number };
   }
 }
 
@@ -19,4 +15,3 @@ declare global {
     }
   }
 }
-

@@ -1,16 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/user";
 
-// Utility to handle responses
-const handleError = (res: Response, error: unknown, message: string) => {
-  console.error(error);
-  res.status(500).json({ message });
-};
-
-// Utility to get `userLocation` from session
-const getUserLocation = (req: Request) => req.session?.userLocation ?? null;
-
-// Controller methods
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const currentUser = await User.findOne({ _id: req.userId });
@@ -19,15 +9,15 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     }
     res.json(currentUser);
   } catch (error) {
-    handleError(res, error, "Something went wrong");
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
 export const createCurrentUser = async (req: Request, res: Response) => {
   try {
-    const { auth0Id, email, latitude, longitude } = req.body;
+    const { auth0Id, email, userLocation } = req.body;
 
-    // Check if user already exists
     let existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -40,29 +30,27 @@ export const createCurrentUser = async (req: Request, res: Response) => {
         existingUser.auth0Id = auth0Ids;
       }
 
-      if (latitude && longitude) {
-        existingUser.latitude = latitude;
-        existingUser.longitude = longitude;
+      if (userLocation && userLocation.length === 2) {
+        existingUser.userLocation = userLocation;
       }
 
       await existingUser.save();
       return res.status(200).json(existingUser);
     }
 
-    // Create a new user
     const newUser = new User({
       auth0Id: [auth0Id],
       email,
-      latitude,
-      longitude,
+      userLocation: userLocation || [],
       role: "user",
       ...req.body,
     });
-    await newUser.save();
 
+    await newUser.save();
     res.status(201).json(newUser.toObject());
   } catch (error) {
-    handleError(res, error, "Error creating user");
+    console.error(error);
+    res.status(500).json({ message: "Error creating user" });
   }
 };
 
@@ -75,21 +63,21 @@ export const updateMyUser = async (req: Request, res: Response) => {
     }
 
     const { name, address, city, country, cellphone } = req.body;
-    const userLocation = getUserLocation(req);
+    const userLocation = req.session?.userLocation;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        name,
-        address,
-        city,
-        country,
-        cellphone,
-        latitude: userLocation?.latitude,
-        longitude: userLocation?.longitude,
-      },
-      { new: true }
-    );
+    const updateData: any = {
+      name,
+      address,
+      city,
+      country,
+      cellphone,
+    };
+
+    if (userLocation) {
+      updateData.userLocation = userLocation;
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -97,46 +85,83 @@ export const updateMyUser = async (req: Request, res: Response) => {
 
     res.status(200).json(user);
   } catch (error) {
-    handleError(res, error, "Failed to update user");
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Failed to update user" });
   }
 };
 
-export const promptForLocation = async (req: Request, res: Response) => {
+// export const promptForLocation = async (req: Request, res: Response) => {
+//   try {
+//     const { latitude, longitude } = req.body;
+
+//     if (typeof latitude !== "number" || typeof longitude !== "number") {
+//       return res.status(400).json({ message: "Invalid location data provided." });
+//     }
+
+//     const userId = req.userId;
+
+//     if (userId) {
+//       const user = await User.findByIdAndUpdate(
+//         userId,
+//         { userLocation: [latitude, longitude] },
+//         { new: true }
+//       );
+//       return res.status(200).json({ message: "Location updated successfully.", user });
+//     }
+
+//     if (!req.session) {
+//       return res.status(500).json({ message: "Session is not initialized." });
+//     }
+
+//     req.session.userLocation = [latitude, longitude];
+//     res.status(200).json({ message: "Location stored temporarily.", location: req.session.userLocation });
+//   } catch (error) {
+//     console.error("Error updating location:", error);
+//     res.status(500).json({ message: "Failed to handle location data" });
+//   }
+// };
+
+
+// Save or update location for a user
+export const saveUserLocation = async (req: Request, res: Response) => {
   try {
     const { latitude, longitude } = req.body;
-    if (!latitude || !longitude) {
-      return res.status(400).json({ message: "Invalid location data provided." });
-    }
 
-    const userId = req.userId;
-
-    if (userId) {
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { latitude, longitude },
-        { new: true }
-      );
-      return res.status(200).json({ message: "Location updated successfully.", user });
+    // Validate input
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
+      return res.status(400).json({ message: "Invalid latitude or longitude." });
     }
 
     if (!req.session) {
       return res.status(500).json({ message: "Session is not initialized." });
     }
 
-    req.session.userLocation = { latitude, longitude };
-    res.status(200).json({
-      message: "Location stored temporarily.",
-      location: req.session.userLocation,
+    // Save location in session for non-logged-in users
+    if (!req.userId) {
+      req.session.userLocation = { latitude, longitude };
+      return res.status(200).json({
+        message: "Location saved to session.",
+        location: req.session.userLocation,
+      });
+    }
+
+    // Save location in database for logged-in users
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { userLocation: [latitude, longitude] }, // Update location in DB
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.status(200).json({
+      message: "Location saved to database.",
+      location: user.userLocation,
     });
   } catch (error) {
-    handleError(res, error, "Failed to handle location data.");
+    console.error("Error saving location:", error);
+    return res.status(500).json({ message: "Failed to save location." });
   }
-};
-
-// Export controller
-export default {
-  getCurrentUser,
-  createCurrentUser,
-  updateMyUser,
-  promptForLocation,
 };
