@@ -37,27 +37,28 @@
     body("branchesInfo")
       .isArray({ min: 1 })
       .withMessage("'branchesInfo' must be a non-empty array."),
-    body("branchesInfo.*.cities")
-      .isString()
-      .notEmpty()
-      .withMessage("Each 'cities' field in 'branchesInfo' must be a valid string."),
-    body("branchesInfo.*.branchName")
-      .isString()
-      .notEmpty()
-      .withMessage("Each 'branchName' must be a valid string."),
-    body("branchesInfo.*.latitude")
-      .isNumeric()
-      .withMessage("Each 'latitude' must be a valid number."),
-    body("branchesInfo.*.longitude")
-      .isNumeric()
-      .withMessage("Each 'longitude' must be a valid number."),
-    body("country").isString().notEmpty().withMessage("Country is required."),
-    body("deliveryPrice")
-      .isNumeric()
-      .withMessage("Delivery price must be a valid number."),
-    body("estimatedDeliveryTime")
-      .isNumeric()
-      .withMessage("Estimated delivery time must be a valid number."),
-    handleValidationErrors,
-  ];
+      body("branchesInfo").isArray().withMessage("Branches info must be an array."),
+      body("branchesInfo.*.cities")
+        .isString()
+        .notEmpty()
+        .withMessage("City name is required."),
+      body("branchesInfo.*.branchName")
+        .isString()
+        .notEmpty()
+        .withMessage("Branch name is required."),
+      body("branchesInfo.*.latitude")
+        .isNumeric()
+        .withMessage("Latitude must be a valid number."),
+      body("branchesInfo.*.longitude")
+        .isNumeric()
+        .withMessage("Longitude must be a valid number."),
+      body("branchesInfo.*.deliveryPrice")
+        .isNumeric()
+        .optional()
+        .withMessage("Delivery price must be a valid number."),
+      body("branchesInfo.*.deliveryTime")
+        .isNumeric()
+        .optional()
+        .withMessage("Delivery time must be a valid number."),
+  ]      
 

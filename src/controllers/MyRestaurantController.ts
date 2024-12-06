@@ -1,10 +1,7 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\MyRestaurantController.ts
-
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 import mongoose from "mongoose";
 import User from "../models/user";
-import { checkImageForInappropriateContent } from "../utils/imageModerator";
 import cloudinary from "cloudinary";
 import Order from "../models/order";
 
@@ -14,9 +11,9 @@ const uploadImage = async (file: Express.Multer.File): Promise<string> => {
     const base64Image = Buffer.from(file.buffer).toString("base64");
     const dataURI = `data:${file.mimetype};base64,${base64Image}`;
     const uploadResponse = await cloudinary.v2.uploader.upload(dataURI, {
-      secure: true // Ensure HTTPS is used for the returned URL
+      secure: true,
     });
-    return uploadResponse.secure_url;//// Use the HTTPS secure_url
+    return uploadResponse.secure_url;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error uploading image:", error.message);
@@ -27,7 +24,6 @@ const uploadImage = async (file: Express.Multer.File): Promise<string> => {
   }
 };
 
-// Fetch all restaurants
 export const getAllRestaurants = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurants = await Restaurant.find().exec();
@@ -43,21 +39,18 @@ export const getAllRestaurants = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Fetch a specific restaurant for the logged-in user
-// Controller to fetch or create restaurant
-// Get logged-in user's restaurant
 export const getMyRestaurant = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId; // Assuming userId is added via middleware
+    const userId = req.userId;
     if (!userId) {
+      console.log("No userId provided");
       return res.status(400).json({ message: "User ID not provided" });
     }
 
-    // Find the restaurant linked to the user
     let restaurant = await Restaurant.findOne({ user: userId });
 
-    // If no restaurant exists, create a new one with default values
     if (!restaurant) {
+      console.log("No restaurant found for user:", userId, "Creating a new one.");
       restaurant = new Restaurant({
         user: new mongoose.Types.ObjectId(userId),
         restaurantName: "New Restaurant",
@@ -67,13 +60,13 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
             branchName: "Default Branch",
             latitude: 0.0,
             longitude: 0.0,
+            deliveryPrice: 0,
+            deliveryTime: 0,
           },
         ],
         country: "Default Country",
-        deliveryPrice: 2000, // Default as cents ($20.00)
-        estimatedDeliveryTime: 0,
         cuisines: [],
-        menuItems: [], // Ensure empty menuItems array is created
+        menuItems: [],
         restaurantImageUrl: "",
         status: "submitted",
       });
@@ -81,51 +74,63 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
       await restaurant.save();
     }
 
-    // Format `menuItems` properly
+    // console.log("Raw restaurant from DB:", restaurant);
+
+    // Convert the entire restaurant document to a plain object once
+    const restaurantObj = restaurant.toObject();
+
     const formattedRestaurant = {
-      ...restaurant.toObject(),
-      deliveryPrice: restaurant.deliveryPrice / 100, // Convert delivery price to dollars
-      menuItems: restaurant.menuItems.map((menuItem) => ({
+      ...restaurantObj,
+      branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
+        ...branch,
+        deliveryPrice: branch.deliveryPrice != null ? branch.deliveryPrice / 100 : 0,
+        deliveryTime: branch.deliveryTime != null ? branch.deliveryTime : 0,
+      })),
+      menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
         ...menuItem,
-        name: menuItem.name || "Unnamed Item", // Fallback for missing names
-        price: menuItem.price / 100, // Convert menu item prices to dollars
-        imageUrl: menuItem.imageUrl || "/path/to/placeholder-image.jpg", // Fallback for missing image URLs
+        name: menuItem.name || "Unnamed Item",
+        price: menuItem.price / 100,
+        imageUrl: menuItem.imageUrl || "/path/to/placeholder-image.jpg",
       })),
     };
 
-    res.json(formattedRestaurant);
+    // Convert to pure JSON object
+    const finalRestaurant = JSON.parse(JSON.stringify(formattedRestaurant));
+    // console.log("Final pure JSON restaurant sent to frontend:", finalRestaurant);
+
+    res.json(finalRestaurant);
   } catch (error) {
     console.error("Error fetching restaurant:", error);
     res.status(500).json({ message: "Error fetching restaurant" });
   }
 };
 
-
-
-
-
-
-
-
-// Create a new restaurant for the logged-in user
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurant = new Restaurant({
       ...req.body,
-      deliveryPrice: Math.round(req.body.deliveryPrice * 100), // Convert to cents
-      branchesInfo: req.body.branchesInfo.map((branch: any) => ({
-        cities: branch.cities,
-        branchName: branch.branchName,
-        latitude: branch.latitude,
-        longitude: branch.longitude,
-      })),
       user: new mongoose.Types.ObjectId(req.userId),
       email: req.userEmail || "",
       lastUpdated: new Date(),
     });
 
     await restaurant.save();
-    res.status(201).json(restaurant);
+
+    const restaurantObj = restaurant.toObject();
+    const formattedResponse = {
+      ...restaurantObj,
+      branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
+        ...branch,
+        deliveryPrice: branch.deliveryPrice / 100,
+      })),
+      menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
+        ...menuItem,
+        price: menuItem.price / 100,
+      })),
+    };
+
+    const finalResponse = JSON.parse(JSON.stringify(formattedResponse));
+    res.status(201).json(finalResponse);
   } catch (error) {
     console.error("Error creating restaurant:", error);
     res.status(500).json({ message: "Error creating restaurant" });
@@ -136,20 +141,55 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne({ user: req.userId });
     if (!restaurant) {
+      console.log("No restaurant found for user:", req.userId);
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    // Update the delivery price and other fields
-    restaurant.deliveryPrice = Math.round(req.body.deliveryPrice * 100); // Convert to cents
-    restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
-    restaurant.restaurantName = req.body.restaurantName;
-    restaurant.country = req.body.country;
-    restaurant.cuisines = req.body.cuisines;
-    restaurant.wholesale = req.body.wholesale;
-    restaurant.cellphone = req.body.cellphone;
+    restaurant.restaurantName = req.body.restaurantName || restaurant.restaurantName;
+    restaurant.country = req.body.country || restaurant.country;
+    restaurant.cuisines = Array.isArray(req.body.cuisines) ? req.body.cuisines : restaurant.cuisines;
+    restaurant.wholesale = typeof req.body.wholesale === "boolean" ? req.body.wholesale : restaurant.wholesale;
+    restaurant.cellphone = req.body.cellphone || restaurant.cellphone;
 
+    if (Array.isArray(req.body.branchesInfo)) {
+      restaurant.branchesInfo = req.body.branchesInfo.map((branch: any, index: number) => ({
+        _id: branch._id || (restaurant.branchesInfo[index]?._id || new mongoose.Types.ObjectId()),
+        cities: branch.cities || restaurant.branchesInfo[index]?.cities || "Default City",
+        branchName: branch.branchName || restaurant.branchesInfo[index]?.branchName || `Branch ${index + 1}`,
+        latitude: typeof branch.latitude === "number" ? branch.latitude : (restaurant.branchesInfo[index]?.latitude || 0),
+        longitude: typeof branch.longitude === "number" ? branch.longitude : (restaurant.branchesInfo[index]?.longitude || 0),
+        deliveryPrice: branch.deliveryPrice != null ? Math.round(branch.deliveryPrice * 100) : (restaurant.branchesInfo[index]?.deliveryPrice || 0),
+        deliveryTime: branch.deliveryTime != null ? branch.deliveryTime : (restaurant.branchesInfo[index]?.deliveryTime || 0),
+      }));
+    }
+
+    if (Array.isArray(req.body.menuItems)) {
+      restaurant.menuItems = req.body.menuItems.map((menuItem: any, i: number) => ({
+        _id: menuItem._id || (restaurant.menuItems[i]?._id || new mongoose.Types.ObjectId()),
+        name: menuItem.name || restaurant.menuItems[i]?.name || "Unnamed Item",
+        price: menuItem.price != null ? Math.round(menuItem.price * 100) : (restaurant.menuItems[i]?.price || 0),
+        imageUrl: menuItem.imageUrl || restaurant.menuItems[i]?.imageUrl || "/path/to/placeholder-image.jpg",
+      }));
+    }
+
+    restaurant.lastUpdated = new Date();
     await restaurant.save();
-    res.status(200).json(restaurant);
+
+    const restaurantObj = restaurant.toObject();
+    const formattedResponse = {
+      ...restaurantObj,
+      branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
+        ...branch,
+        deliveryPrice: branch.deliveryPrice / 100,
+      })),
+      menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
+        ...menuItem,
+        price: menuItem.price / 100,
+      })),
+    };
+
+    const finalResponse = JSON.parse(JSON.stringify(formattedResponse));
+    res.status(200).json(finalResponse);
   } catch (error) {
     console.error("Error updating restaurant:", error);
     res.status(500).json({ message: "Error updating restaurant" });
@@ -158,11 +198,7 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
 
 
 
-
-
-
-
-// Update restaurant status (for admin use)
+// The other controller functions remain unchanged, but we won't omit them here:
 export const updateRestaurantStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurantId = req.params.id;
@@ -207,7 +243,7 @@ const getMyRestaurantOrders = async (req: Request, res: Response) => {
       query.status = status;
     }
 
-    // Filter by date if provided (using `createdAt` or `dateDelivered`)
+    // Filter by date if provided (using `dateDelivered`)
     if (date) {
       const dateObj = new Date(date as string);
       const nextDay = new Date(dateObj);
@@ -228,8 +264,6 @@ const getMyRestaurantOrders = async (req: Request, res: Response) => {
   }
 };
 
-
-// Update restaurant order status
 export const updateRestaurantOrderStatus = async (req: Request, res: Response) => {
   const { orderId } = req.params;
   const { status } = req.body;
@@ -245,7 +279,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       return res.status(403).json({ message: "Unauthorized to update this order" });
     }
 
-    // Define valid transitions
     const validTransitions: Record<string, string[]> = {
       placed: ["confirmed", "rejected"],
       confirmed: ["rejected"],
@@ -261,7 +294,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       return res.status(400).json({ message: `Invalid transition from ${order.status} to ${status}` });
     }
 
-    // Handle rejected messages
     if (status === "rejected") {
       order.rejectionMessage = {
         message: ["placed", "confirmed"].includes(order.status)
@@ -271,10 +303,8 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       };
     }
 
-    // Handle resolved messages
     if (status === "resolved") {
       const isBeforePay = order.rejectionMessage?.message === "Out of stock, dragons flying to get ingredients.";
-
       order.resolutionMessage = {
         message: isBeforePay
           ? "Order resolved before payment, no refund needed."
@@ -283,7 +313,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       };
     }
 
-    // Update the status
     order.status = status;
     await order.save();
 
@@ -293,13 +322,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
     res.status(500).json({ message: "Failed to update restaurant order status" });
   }
 };
-
-
-
-
-
-
-
 
 export default {
   updateRestaurantOrderStatus,

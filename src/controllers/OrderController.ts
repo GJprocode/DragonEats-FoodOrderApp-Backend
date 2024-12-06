@@ -155,6 +155,17 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       });
     }
 
+    // Convert cart items prices and deliveryPrice to cents
+    const itemsTotalCents = cartItems.reduce(
+      (total: number, item: { price: number; quantity: number }) => total + Math.round(item.price) * item.quantity,
+      0
+    );
+
+    // Use branchDetails to get deliveryPrice (in dollars), convert to cents
+    const deliveryPriceCents = branchDetails && typeof branchDetails.deliveryPrice === "number"
+      ? Math.round(branchDetails.deliveryPrice)
+      : 0;
+
     if (!existingOrder) {
       existingOrder = new Order({
         restaurant: restaurant._id,
@@ -164,20 +175,14 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         status: "placed",
         deliveryDetails,
         cartItems,
-        totalAmount: 0,
+        totalAmount: 0, // will set below
       });
     }
 
-    const itemsTotal = cartItems.reduce(
-      (total: number, item: { price: number; quantity: number }) => total + item.price * item.quantity,
-      0
-    );
-
-    existingOrder.totalAmount = itemsTotal + restaurant.deliveryPrice;
-
+    existingOrder.totalAmount = itemsTotalCents + deliveryPriceCents;
     await existingOrder.save();
 
-    const lineItems = cartItems.map((item: { name: any; price: number; quantity: any; }) => ({
+    const lineItems = cartItems.map((item: { name: string; price: number; quantity: number }) => ({
       price_data: {
         currency: "usd",
         product_data: { name: item.name },
@@ -190,7 +195,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       price_data: {
         currency: "usd",
         product_data: { name: "Delivery Fee" },
-        unit_amount: Math.round(restaurant.deliveryPrice),
+        unit_amount: deliveryPriceCents,
       },
       quantity: 1,
     });
@@ -234,7 +239,8 @@ export const getRestaurantOrders = async (req: Request, res: Response) => {
     console.error("Error fetching restaurant orders:", error);
     res.status(500).json({ message: "Something went wrong" });
   }
-}
+};
+
 export default {
   updateUserOrderStatus,
   getMyOrders,
