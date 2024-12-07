@@ -1,3 +1,5 @@
+// backend/src/controllers/MyRestaurantController.ts
+
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 import mongoose from "mongoose";
@@ -74,8 +76,6 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
       await restaurant.save();
     }
 
-    // console.log("Raw restaurant from DB:", restaurant);
-
     // Convert the entire restaurant document to a plain object once
     const restaurantObj = restaurant.toObject();
 
@@ -96,7 +96,6 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
 
     // Convert to pure JSON object
     const finalRestaurant = JSON.parse(JSON.stringify(formattedRestaurant));
-    // console.log("Final pure JSON restaurant sent to frontend:", finalRestaurant);
 
     res.json(finalRestaurant);
   } catch (error) {
@@ -107,21 +106,77 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
 
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
+    const existingRestaurant = await Restaurant.findOne({ user: req.userId }).exec();
+    if (existingRestaurant) {
+      res.status(409).json({ message: "User restaurant already exists" });
+      return;
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    // Convert wholesale to boolean
+    const wholesale = req.body.wholesale === "true";
+
     const restaurant = new Restaurant({
-      ...req.body,
+      restaurantName: req.body.restaurantName,
+      cellphone: req.body.cellphone,
+      branchesInfo: req.body.branchesInfo.map((branch: any) => ({
+        cities: branch.cities,
+        branchName: branch.branchName,
+        latitude: branch.latitude,
+        longitude: branch.longitude,
+        deliveryPrice: Math.round(branch.deliveryPrice * 100), // Convert to cents
+        deliveryTime: branch.deliveryTime,
+      })),
+      country: req.body.country,
+      wholesale: wholesale, // Saved as boolean
+      cuisines: req.body.cuisines,
+      menuItems: req.body.menuItems.map((item: any) => ({
+        name: item.name,
+        price: Math.round(item.price * 100), // Convert to cents
+        imageUrl: item.imageUrl || "",
+      })),
       user: new mongoose.Types.ObjectId(req.userId),
-      email: req.userEmail || "",
+      email: user.email || "",
+      status: "submitted",
       lastUpdated: new Date(),
     });
 
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    // Handle restaurant image
+    if (files?.restaurantImageFile && files.restaurantImageFile.length > 0) {
+      const file = files.restaurantImageFile[0];
+      const imageUrl = await uploadImage(file);
+      restaurant.restaurantImageUrl = imageUrl;
+    }
+
+    // Handle menu item images
+    if (files) {
+      for (let i = 0; i < req.body.menuItems.length; i++) {
+        const field = `menuItems[${i}].menuItemImageFile`; // Use dot notation
+        if (files[field] && files[field].length > 0) {
+          const file = files[field][0];
+          const imageUrl = await uploadImage(file);
+          restaurant.menuItems[i].imageUrl = imageUrl;
+        }
+      }
+    }
+
     await restaurant.save();
 
+    // Prepare response
     const restaurantObj = restaurant.toObject();
     const formattedResponse = {
       ...restaurantObj,
       branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
         ...branch,
         deliveryPrice: branch.deliveryPrice / 100,
+        deliveryTime: branch.deliveryTime,
       })),
       menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
         ...menuItem,
@@ -131,9 +186,14 @@ export const createMyRestaurant = async (req: Request, res: Response): Promise<v
 
     const finalResponse = JSON.parse(JSON.stringify(formattedResponse));
     res.status(201).json(finalResponse);
-  } catch (error) {
-    console.error("Error creating restaurant:", error);
-    res.status(500).json({ message: "Error creating restaurant" });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error creating restaurant:", error.message);
+      res.status(500).json({ message: "Error creating restaurant", error: error.message });
+    } else {
+      console.error("Unexpected error creating restaurant:", error);
+      res.status(500).json({ message: "Unexpected error creating restaurant" });
+    }
   }
 };
 
@@ -145,36 +205,80 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
+    // Convert wholesale to boolean if provided
+    if (req.body.wholesale !== undefined) {
+      restaurant.wholesale = req.body.wholesale === "true";
+    }
+
+    // Update basic fields
     restaurant.restaurantName = req.body.restaurantName || restaurant.restaurantName;
+    restaurant.cellphone = req.body.cellphone || restaurant.cellphone;
     restaurant.country = req.body.country || restaurant.country;
     restaurant.cuisines = Array.isArray(req.body.cuisines) ? req.body.cuisines : restaurant.cuisines;
-    restaurant.wholesale = typeof req.body.wholesale === "boolean" ? req.body.wholesale : restaurant.wholesale;
-    restaurant.cellphone = req.body.cellphone || restaurant.cellphone;
 
+    // Update branchesInfo
     if (Array.isArray(req.body.branchesInfo)) {
       restaurant.branchesInfo = req.body.branchesInfo.map((branch: any, index: number) => ({
         _id: branch._id || (restaurant.branchesInfo[index]?._id || new mongoose.Types.ObjectId()),
         cities: branch.cities || restaurant.branchesInfo[index]?.cities || "Default City",
-        branchName: branch.branchName || restaurant.branchesInfo[index]?.branchName || `Branch ${index + 1}`,
-        latitude: typeof branch.latitude === "number" ? branch.latitude : (restaurant.branchesInfo[index]?.latitude || 0),
-        longitude: typeof branch.longitude === "number" ? branch.longitude : (restaurant.branchesInfo[index]?.longitude || 0),
-        deliveryPrice: branch.deliveryPrice != null ? Math.round(branch.deliveryPrice * 100) : (restaurant.branchesInfo[index]?.deliveryPrice || 0),
-        deliveryTime: branch.deliveryTime != null ? branch.deliveryTime : (restaurant.branchesInfo[index]?.deliveryTime || 0),
+        branchName:
+          branch.branchName || restaurant.branchesInfo[index]?.branchName || `Branch ${index + 1}`,
+        latitude:
+          typeof branch.latitude === "number"
+            ? branch.latitude
+            : restaurant.branchesInfo[index]?.latitude || 0,
+        longitude:
+          typeof branch.longitude === "number"
+            ? branch.longitude
+            : restaurant.branchesInfo[index]?.longitude || 0,
+        deliveryPrice:
+          branch.deliveryPrice != null
+            ? Math.round(branch.deliveryPrice * 100)
+            : restaurant.branchesInfo[index]?.deliveryPrice || 0,
+        deliveryTime:
+          branch.deliveryTime != null ? branch.deliveryTime : restaurant.branchesInfo[index]?.deliveryTime || 0,
       }));
     }
 
+    // Update menuItems
     if (Array.isArray(req.body.menuItems)) {
-      restaurant.menuItems = req.body.menuItems.map((menuItem: any, i: number) => ({
-        _id: menuItem._id || (restaurant.menuItems[i]?._id || new mongoose.Types.ObjectId()),
-        name: menuItem.name || restaurant.menuItems[i]?.name || "Unnamed Item",
-        price: menuItem.price != null ? Math.round(menuItem.price * 100) : (restaurant.menuItems[i]?.price || 0),
-        imageUrl: menuItem.imageUrl || restaurant.menuItems[i]?.imageUrl || "/path/to/placeholder-image.jpg",
+      restaurant.menuItems = req.body.menuItems.map((menuItem: any, index: number) => ({
+        _id: menuItem._id || (restaurant.menuItems[index]?._id || new mongoose.Types.ObjectId()),
+        name: menuItem.name || restaurant.menuItems[index]?.name || "Unnamed Item",
+        price:
+          menuItem.price != null ? Math.round(menuItem.price * 100) : restaurant.menuItems[index]?.price || 0,
+        imageUrl:
+          menuItem.imageUrl ||
+          restaurant.menuItems[index]?.imageUrl ||
+          "/path/to/placeholder-image.jpg",
       }));
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    // Handle restaurant image update
+    if (files?.restaurantImageFile && files.restaurantImageFile.length > 0) {
+      const file = files.restaurantImageFile[0];
+      const imageUrl = await uploadImage(file);
+      restaurant.restaurantImageUrl = imageUrl;
+    }
+
+    // Handle menu item images update
+    if (files) {
+      for (let i = 0; i < req.body.menuItems.length; i++) {
+        const field = `menuItems[${i}].menuItemImageFile`; // Use dot notation
+        if (files[field] && files[field].length > 0) {
+          const file = files[field][0];
+          const imageUrl = await uploadImage(file);
+          restaurant.menuItems[i].imageUrl = imageUrl;
+        }
+      }
     }
 
     restaurant.lastUpdated = new Date();
     await restaurant.save();
 
+    // Prepare response
     const restaurantObj = restaurant.toObject();
     const formattedResponse = {
       ...restaurantObj,
@@ -190,15 +294,19 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
 
     const finalResponse = JSON.parse(JSON.stringify(formattedResponse));
     res.status(200).json(finalResponse);
-  } catch (error) {
-    console.error("Error updating restaurant:", error);
-    res.status(500).json({ message: "Error updating restaurant" });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error updating restaurant:", error.message);
+      res.status(500).json({ message: "Error updating restaurant", error: error.message });
+    } else {
+      console.error("Unexpected error updating restaurant:", error);
+      res.status(500).json({ message: "Unexpected error updating restaurant" });
+    }
   }
 };
 
+// Additional Controller Functions (unchanged)
 
-
-// The other controller functions remain unchanged, but we won't omit them here:
 export const updateRestaurantStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurantId = req.params.id;
@@ -228,7 +336,7 @@ export const updateRestaurantStatus = async (req: Request, res: Response): Promi
   }
 };
 
-const getMyRestaurantOrders = async (req: Request, res: Response) => {
+export const getMyRestaurantOrders = async (req: Request, res: Response) => {
   try {
     const { status, date } = req.query;
     const restaurant = await Restaurant.findOne({ user: req.userId });
@@ -324,10 +432,11 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
 };
 
 export default {
-  updateRestaurantOrderStatus,
-  getMyRestaurantOrders,
+  getAllRestaurants,
   getMyRestaurant,
   createMyRestaurant,
   updateMyRestaurant,
-  uploadImage,
+  updateRestaurantStatus,
+  getMyRestaurantOrders,
+  updateRestaurantOrderStatus,
 };

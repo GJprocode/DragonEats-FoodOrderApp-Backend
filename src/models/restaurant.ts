@@ -1,6 +1,8 @@
+// backend/src/models/restaurant.ts
+
+// backend/src/models/restaurant.ts
+
 import mongoose, { Schema, Document, Types } from "mongoose";
-
-
 
 // Define the MenuItem schema and type
 const menuItemSchema = new Schema({
@@ -33,7 +35,7 @@ const branchInfoSchema = new Schema({
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
   deliveryPrice: { type: Number, default: 0 }, // in cents
-  deliveryTime: { type: Number, default: 0 },  // in minutes or days, depending on business type
+  deliveryTime: { type: Number, default: 0 }, // in minutes or days, depending on business type
 });
 
 export type BranchInfoType = {
@@ -43,7 +45,7 @@ export type BranchInfoType = {
   latitude: number;
   longitude: number;
   deliveryPrice: number; // in cents
-  deliveryTime: number;  // in minutes or days
+  deliveryTime: number; // in minutes or days
 };
 
 // Define the Restaurant interface
@@ -66,7 +68,7 @@ interface IRestaurant extends Document {
 }
 
 // Define the Restaurant schema
-const RestaurantSchema = new Schema({
+const RestaurantSchema: Schema = new Schema({
   restaurantName: { type: String, required: true },
   branchesInfo: [branchInfoSchema],
   country: { type: String, required: true },

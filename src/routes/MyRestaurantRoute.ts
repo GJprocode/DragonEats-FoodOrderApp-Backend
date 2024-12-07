@@ -1,11 +1,20 @@
 //  C:\Users\gertf\Desktop\FoodApp\backend\src\routes\MyRestaurantRoute.ts
 
+// backend/src/routes/MyRestaurantRoute.ts
+
+// backend/src/routes/MyRestaurantRoute.ts
+
 import express from "express";
 import multer from "multer";
-import { getMyRestaurant, createMyRestaurant, updateMyRestaurant } from "../controllers/MyRestaurantController";
+import {
+  getMyRestaurant,
+  createMyRestaurant,
+  updateMyRestaurant,
+  updateRestaurantOrderStatus,
+  getMyRestaurantOrders,
+} from "../controllers/MyRestaurantController";
 import { jwtCheck, jwtParse } from "../middleware/auth";
 import { validateMyRestaurantRequest } from "../middleware/validation";
-import  MyRestaurantController from "../controllers/MyRestaurantController";
 
 const router = express.Router();
 
@@ -17,37 +26,20 @@ const upload = multer({
   },
 });
 
-router.get(
-  "/order",
-  jwtCheck,
-  jwtParse,
-  MyRestaurantController.getMyRestaurantOrders
-);
-
-router.patch(
-  "/order/:orderId/status",
-  jwtCheck,
-  jwtParse,
-  MyRestaurantController.updateRestaurantOrderStatus
-);
-
-
-
+// Define menuItemsFields with the correct field names using dot notation
 const menuItemsFields = Array.from({ length: 40 }, (_, i) => ({
-  name: `menuItems[${i}].menuItemImageFile`,
+  name: `menuItems[${i}].menuItemImageFile`, // Matches frontend with dot notation
   maxCount: 1,
 }));
 
+// Define the fields Multer should handle
 const restaurantUpload = upload.fields([
-  { name: "restaurantImageFile", maxCount: 1 },
+  { name: "restaurantImageFile", maxCount: 1 }, // Matches frontend
   ...menuItemsFields,
 ]);
 
-// GET restaurant for logged-in user actually no validation needed but works with jwt & parse, 
-router.get("/",
-   jwtCheck,
-    jwtParse,
-    getMyRestaurant);
+// GET restaurant for logged-in user
+router.get("/", jwtCheck, jwtParse, getMyRestaurant);
 
 // POST (create) a new restaurant
 router.post(
@@ -69,5 +61,20 @@ router.put(
   updateMyRestaurant
 );
 
-export default router;
+// PATCH (update order status)
+router.patch(
+  "/order/:id/status",
+  jwtCheck,
+  jwtParse,
+  updateRestaurantOrderStatus
+);
 
+// GET (fetch orders)
+router.get(
+  "/order",
+  jwtCheck,
+  jwtParse,
+  getMyRestaurantOrders
+);
+
+export default router;
