@@ -54,7 +54,10 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
     }
 
     order.status = status;
+    console.log(`Updating order ${orderId} status from ${order.status} to ${status}`);
     await order.save();
+    console.log(`Order status updated: ${order.status}`);
+
 
     res.status(200).json(order);
   } catch (error) {
