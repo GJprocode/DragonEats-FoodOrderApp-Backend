@@ -2,24 +2,26 @@
 
 {
   "compilerOptions": {
-    "outDir": "./dist",                   // Specifies output directory for compiled files
-    "rootDir": "./src",                   // Specifies the root directory of input files
-    "typeRoots": ["./node_modules/@types", "./src/types"], // Includes custom and default type definitions
-    "types": ["node", "express"],         // Includes specific type definitions
-    "target": "ES2016",                   // Compiles for ES2016
-    "module": "commonjs",                 // Uses CommonJS module system
+    "outDir": "./dist",                   // Output directory for compiled files
+    "rootDir": "./src",                   // Root directory of input files
+    "typeRoots": ["./node_modules/@types", "./src/types"], // Custom and default type definitions
+    "types": ["node", "express", "multer", "cloudinary", "stripe"], // Include specific type definitions
+    "target": "ES2020",                   // Modern JavaScript target for compatibility
+    "module": "commonjs",                 // CommonJS module system
+    "moduleResolution": "node",          // Resolve modules using Node.js style
     "esModuleInterop": true,              // Enables default imports for CommonJS modules
-    "forceConsistentCasingInFileNames": true, // Enforces consistent casing in import paths
-    "strict": true,                       // Enables all strict type-checking options
-    "skipLibCheck": true                  // Skips type-checking for `node_modules`
+    "forceConsistentCasingInFileNames": true, // Enforce consistent import path casing
+    "strict": true,                       // Enable all strict type-checking options
+    "skipLibCheck": true,                 // Skip type-checking for `node_modules`
+    "allowSyntheticDefaultImports": true // Allow default imports from modules with no default export
   },
   "include": [
-    "src/**/*.ts",                        // Includes all TypeScript files in `src`
-    "src/**/*.d.ts",                      // Includes all declaration files in `src`
-    "types/**/*.d.ts"                     // Includes all declaration files in `types`
+    "src/**/*.ts",                        // Include all TypeScript files in `src`
+    "src/**/*.d.ts",                      // Include all declaration files in `src`
+    "types/**/*.d.ts"                     // Include all declaration files in `types`
   ],
   "exclude": [
-    "node_modules",                       // Excludes `node_modules` directory
-    "dist"                                // Excludes the output directory
+    "node_modules",                       // Exclude `node_modules` directory
+    "dist"                                // Exclude the output directory
   ]
 }
