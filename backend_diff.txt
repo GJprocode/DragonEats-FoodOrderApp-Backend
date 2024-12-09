@@ -1,0 +1,401 @@
+[1mdiff --git a/src/controllers/MyRestaurantController.ts b/src/controllers/MyRestaurantController.ts[m
+[1mindex d1416979..cce03591 100644[m
+[1m--- a/src/controllers/MyRestaurantController.ts[m
+[1m+++ b/src/controllers/MyRestaurantController.ts[m
+[36m@@ -1,3 +1,5 @@[m
+[32m+[m[32m// backend/src/controllers/MyRestaurantController.ts[m
+[32m+[m
+ import { Request, Response } from "express";[m
+ import Restaurant from "../models/restaurant";[m
+ import mongoose from "mongoose";[m
+[36m@@ -74,8 +76,6 @@[m [mexport const getMyRestaurant = async (req: Request, res: Response) => {[m
+       await restaurant.save();[m
+     }[m
+ [m
+[31m-    // console.log("Raw restaurant from DB:", restaurant);[m
+[31m-[m
+     // Convert the entire restaurant document to a plain object once[m
+     const restaurantObj = restaurant.toObject();[m
+ [m
+[36m@@ -96,7 +96,6 @@[m [mexport const getMyRestaurant = async (req: Request, res: Response) => {[m
+ [m
+     // Convert to pure JSON object[m
+     const finalRestaurant = JSON.parse(JSON.stringify(formattedRestaurant));[m
+[31m-    // console.log("Final pure JSON restaurant sent to frontend:", finalRestaurant);[m
+ [m
+     res.json(finalRestaurant);[m
+   } catch (error) {[m
+[36m@@ -107,21 +106,77 @@[m [mexport const getMyRestaurant = async (req: Request, res: Response) => {[m
+ [m
+ export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {[m
+   try {[m
+[32m+[m[32m    const existingRestaurant = await Restaurant.findOne({ user: req.userId }).exec();[m
+[32m+[m[32m    if (existingRestaurant) {[m
+[32m+[m[32m      res.status(409).json({ message: "User restaurant already exists" });[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    const user = await User.findById(req.userId);[m
+[32m+[m[32m    if (!user) {[m
+[32m+[m[32m      res.status(404).json({ message: "User not found" });[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // Convert wholesale to boolean[m
+[32m+[m[32m    const wholesale = req.body.wholesale === "true";[m
+[32m+[m
+     const restaurant = new Restaurant({[m
+[31m-      ...req.body,[m
+[32m+[m[32m      restaurantName: req.body.restaurantName,[m
+[32m+[m[32m      cellphone: req.body.cellphone,[m
+[32m+[m[32m      branchesInfo: req.body.branchesInfo.map((branch: any) => ({[m
+[32m+[m[32m        cities: branch.cities,[m
+[32m+[m[32m        branchName: branch.branchName,[m
+[32m+[m[32m        latitude: branch.latitude,[m
+[32m+[m[32m        longitude: branch.longitude,[m
+[32m+[m[32m        deliveryPrice: Math.round(branch.deliveryPrice * 100), // Convert to cents[m
+[32m+[m[32m        deliveryTime: branch.deliveryTime,[m
+[32m+[m[32m      })),[m
+[32m+[m[32m      country: req.body.country,[m
+[32m+[m[32m      wholesale: wholesale, // Saved as boolean[m
+[32m+[m[32m      cuisines: req.body.cuisines,[m
+[32m+[m[32m      menuItems: req.body.menuItems.map((item: any) => ({[m
+[32m+[m[32m        name: item.name,[m
+[32m+[m[32m        price: Math.round(item.price * 100), // Convert to cents[m
+[32m+[m[32m        imageUrl: item.imageUrl || "",[m
+[32m+[m[32m      })),[m
+       user: new mongoose.Types.ObjectId(req.userId),[m
+[31m-      email: req.userEmail || "",[m
+[32m+[m[32m      email: user.email || "",[m
+[32m+[m[32m      status: "submitted",[m
+       lastUpdated: new Date(),[m
+     });[m
+ [m
+[32m+[m[32m    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;[m
+[32m+[m
+[32m+[m[32m    // Handle restaurant image[m
+[32m+[m[32m    if (files?.restaurantImageFile && files.restaurantImageFile.length > 0) {[m
+[32m+[m[32m      const file = files.restaurantImageFile[0];[m
+[32m+[m[32m      const imageUrl = await uploadImage(file);[m
+[32m+[m[32m      restaurant.restaurantImageUrl = imageUrl;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // Handle menu item images[m
+[32m+[m[32m    if (files) {[m
+[32m+[m[32m      for (let i = 0; i < req.body.menuItems.length; i++) {[m
+[32m+[m[32m        const field = `menuItems[${i}].menuItemImageFile`; // Use dot notation[m
+[32m+[m[32m        if (files[field] && files[field].length > 0) {[m
+[32m+[m[32m          const file = files[field][0];[m
+[32m+[m[32m          const imageUrl = await uploadImage(file);[m
+[32m+[m[32m          restaurant.menuItems[i].imageUrl = imageUrl;[m
+[32m+[m[32m        }[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m
+     await restaurant.save();[m
+ [m
+[32m+[m[32m    // Prepare response[m
+     const restaurantObj = restaurant.toObject();[m
+     const formattedResponse = {[m
+       ...restaurantObj,[m
+       branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({[m
+         ...branch,[m
+         deliveryPrice: branch.deliveryPrice / 100,[m
+[32m+[m[32m        deliveryTime: branch.deliveryTime,[m
+       })),[m
+       menuItems: restaurantObj.menuItems.map((menuItem: any) => ({[m
+         ...menuItem,[m
+[36m@@ -131,9 +186,14 @@[m [mexport const createMyRestaurant = async (req: Request, res: Response): Promise<v[m
+ [m
+     const finalResponse = JSON.parse(JSON.stringify(formattedResponse));[m
+     res.status(201).json(finalResponse);[m
+[31m-  } catch (error) {[m
+[31m-    console.error("Error creating restaurant:", error);[m
+[31m-    res.status(500).json({ message: "Error creating restaurant" });[m
+[32m+[m[32m  } catch (error: unknown) {[m
+[32m+[m[32m    if (error instanceof Error) {[m
+[32m+[m[32m      console.error("Error creating restaurant:", error.message);[m
+[32m+[m[32m      res.status(500).json({ message: "Error creating restaurant", error: error.message });[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      console.error("Unexpected error creating restaurant:", error);[m
+[32m+[m[32m      res.status(500).json({ message: "Unexpected error creating restaurant" });[m
+[32m+[m[32m    }[m
+   }[m
+ };[m
+ [m
+[36m@@ -145,36 +205,80 @@[m [mexport const updateMyRestaurant = async (req: Request, res: Response) => {[m
+       return res.status(404).json({ message: "Restaurant not found" });[m
+     }[m
+ [m
+[32m+[m[32m    // Convert wholesale to boolean if provided[m
+[32m+[m[32m    if (req.body.wholesale !== undefined) {[m
+[32m+[m[32m      restaurant.wholesale = req.body.wholesale === "true";[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // Update basic fields[m
+     restaurant.restaurantName = req.body.restaurantName || restaurant.restaurantName;[m
+[32m+[m[32m    restaurant.cellphone = req.body.cellphone || restaurant.cellphone;[m
+     restaurant.country = req.body.country || restaurant.country;[m
+     restaurant.cuisines = Array.isArray(req.body.cuisines) ? req.body.cuisines : restaurant.cuisines;[m
+[31m-    restaurant.wholesale = typeof req.body.wholesale === "boolean" ? req.body.wholesale : restaurant.wholesale;[m
+[31m-    restaurant.cellphone = req.body.cellphone || restaurant.cellphone;[m
+ [m
+[32m+[m[32m    // Update branchesInfo[m
+     if (Array.isArray(req.body.branchesInfo)) {[m
+       restaurant.branchesInfo = req.body.branchesInfo.map((branch: any, index: number) => ({[m
+         _id: branch._id || (restaurant.branchesInfo[index]?._id || new mongoose.Types.ObjectId()),[m
+         cities: branch.cities || restaurant.branchesInfo[index]?.cities || "Default City",[m
+[31m-        branchName: branch.branchName || restaurant.branchesInfo[index]?.branchName || `Branch ${index + 1}`,[m
+[31m-        latitude: typeof branch.latitude === "number" ? branch.latitude : (restaurant.branchesInfo[index]?.latitude || 0),[m
+[31m-        longitude: typeof branch.longitude === "number" ? branch.longitude : (restaurant.branchesInfo[index]?.longitude || 0),[m
+[31m-        deliveryPrice: branch.deliveryPrice != null ? Math.round(branch.deliveryPrice * 100) : (restaurant.branchesInfo[index]?.deliveryPrice || 0),[m
+[31m-        deliveryTime: branch.deliveryTime != null ? branch.deliveryTime : (restaurant.branchesInfo[index]?.deliveryTime || 0),[m
+[32m+[m[32m        branchName:[m
+[32m+[m[32m          branch.branchName || restaurant.branchesInfo[index]?.branchName || `Branch ${index + 1}`,[m
+[32m+[m[32m        latitude:[m
+[32m+[m[32m          typeof branch.latitude === "number"[m
+[32m+[m[32m            ? branch.latitude[m
+[32m+[m[32m            : restaurant.branchesInfo[index]?.latitude || 0,[m
+[32m+[m[32m        longitude:[m
+[32m+[m[32m          typeof branch.longitude === "number"[m
+[32m+[m[32m            ? branch.longitude[m
+[32m+[m[32m            : restaurant.branchesInfo[index]?.longitude || 0,[m
+[32m+[m[32m        deliveryPrice:[m
+[32m+[m[32m          branch.deliveryPrice != null[m
+[32m+[m[32m            ? Math.round(branch.deliveryPrice * 100)[m
+[32m+[m[32m            : restaurant.branchesInfo[index]?.deliveryPrice || 0,[m
+[32m+[m[32m        deliveryTime:[m
+[32m+[m[32m          branch.deliveryTime != null ? branch.deliveryTime : restaurant.branchesInfo[index]?.deliveryTime || 0,[m
+       }));[m
+     }[m
+ [m
+[32m+[m[32m    // Update menuItems[m
+     if (Array.isArray(req.body.menuItems)) {[m
+[31m-      restaurant.menuItems = req.body.menuItems.map((menuItem: any, i: number) => ({[m
+[31m-        _id: menuItem._id || (restaurant.menuItems[i]?._id || new mongoose.Types.ObjectId()),[m
+[31m-        name: menuItem.name || restaurant.menuItems[i]?.name || "Unnamed Item",[m
+[31m-        price: menuItem.price != null ? Math.round(menuItem.price * 100) : (restaurant.menuItems[i]?.price || 0),[m
+[31m-        imageUrl: menuItem.imageUrl || restaurant.menuItems[i]?.imageUrl || "/path/to/placeholder-image.jpg",[m
+[32m+[m[32m      restaurant.menuItems = req.body.menuItems.map((menuItem: any, index: number) => ({[m
+[32m+[m[32m        _id: menuItem._id || (restaurant.menuItems[index]?._id || new mongoose.Types.ObjectId()),[m
+[32m+[m[32m        name: menuItem.name || restaurant.menuItems[index]?.name || "Unnamed Item",[m
+[32m+[m[32m        price:[m
+[32m+[m[32m          menuItem.price != null ? Math.round(menuItem.price * 100) : restaurant.menuItems[index]?.price || 0,[m
+[32m+[m[32m        imageUrl:[m
+[32m+[m[32m          menuItem.imageUrl ||[m
+[32m+[m[32m          restaurant.menuItems[index]?.imageUrl ||[m
+[32m+[m[32m          "/path/to/placeholder-image.jpg",[m
+       }));[m
+     }[m
+ [m
+[32m+[m[32m    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;[m
+[32m+[m
+[32m+[m[32m    // Handle restaurant image update[m
+[32m+[m[32m    if (files?.restaurantImageFile && files.restaurantImageFile.length > 0) {[m
+[32m+[m[32m      const file = files.restaurantImageFile[0];[m
+[32m+[m[32m      const imageUrl = await uploadImage(file);[m
+[32m+[m[32m      restaurant.restaurantImageUrl = imageUrl;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // Handle menu item images update[m
+[32m+[m[32m    if (files) {[m
+[32m+[m[32m      for (let i = 0; i < req.body.menuItems.length; i++) {[m
+[32m+[m[32m        const field = `menuItems[${i}].menuItemImageFile`; // Use dot notation[m
+[32m+[m[32m        if (files[field] && files[field].length > 0) {[m
+[32m+[m[32m          const file = files[field][0];[m
+[32m+[m[32m          const imageUrl = await uploadImage(file);[m
+[32m+[m[32m          restaurant.menuItems[i].imageUrl = imageUrl;[m
+[32m+[m[32m        }[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m
+     restaurant.lastUpdated = new Date();[m
+     await restaurant.save();[m
+ [m
+[32m+[m[32m    // Prepare response[m
+     const restaurantObj = restaurant.toObject();[m
+     const formattedResponse = {[m
+       ...restaurantObj,[m
+[36m@@ -190,15 +294,19 @@[m [mexport const updateMyRestaurant = async (req: Request, res: Response) => {[m
+ [m
+     const finalResponse = JSON.parse(JSON.stringify(formattedResponse));[m
+     res.status(200).json(finalResponse);[m
+[31m-  } catch (error) {[m
+[31m-    console.error("Error updating restaurant:", error);[m
+[31m-    res.status(500).json({ message: "Error updating restaurant" });[m
+[32m+[m[32m  } catch (error: unknown) {[m
+[32m+[m[32m    if (error instanceof Error) {[m
+[32m+[m[32m      console.error("Error updating restaurant:", error.message);[m
+[32m+[m[32m      res.status(500).json({ message: "Error updating restaurant", error: error.message });[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      console.error("Unexpected error updating restaurant:", error);[m
+[32m+[m[32m      res.status(500).json({ message: "Unexpected error updating restaurant" });[m
+[32m+[m[32m    }[m
+   }[m
+ };[m
+ [m
+[32m+[m[32m// Additional Controller Functions (unchanged)[m
+ [m
+[31m-[m
+[31m-// The other controller functions remain unchanged, but we won't omit them here:[m
+ export const updateRestaurantStatus = async (req: Request, res: Response): Promise<void> => {[m
+   try {[m
+     const restaurantId = req.params.id;[m
+[36m@@ -228,7 +336,7 @@[m [mexport const updateRestaurantStatus = async (req: Request, res: Response): Promi[m
+   }[m
+ };[m
+ [m
+[31m-const getMyRestaurantOrders = async (req: Request, res: Response) => {[m
+[32m+[m[32mexport const getMyRestaurantOrders = async (req: Request, res: Response) => {[m
+   try {[m
+     const { status, date } = req.query;[m
+     const restaurant = await Restaurant.findOne({ user: req.userId });[m
+[36m@@ -324,10 +432,11 @@[m [mexport const updateRestaurantOrderStatus = async (req: Request, res: Response) =[m
+ };[m
+ [m
+ export default {[m
+[31m-  updateRestaurantOrderStatus,[m
+[31m-  getMyRestaurantOrders,[m
+[32m+[m[32m  getAllRestaurants,[m
+   getMyRestaurant,[m
+   createMyRestaurant,[m
+   updateMyRestaurant,[m
+[31m-  uploadImage,[m
+[32m+[m[32m  updateRestaurantStatus,[m
+[32m+[m[32m  getMyRestaurantOrders,[m
+[32m+[m[32m  updateRestaurantOrderStatus,[m
+ };[m
+[1mdiff --git a/src/models/restaurant.ts b/src/models/restaurant.ts[m
+[1mindex 43caaab9..80ddc51b 100644[m
+[1m--- a/src/models/restaurant.ts[m
+[1m+++ b/src/models/restaurant.ts[m
+[36m@@ -1,6 +1,8 @@[m
+[31m-import mongoose, { Schema, Document, Types } from "mongoose";[m
+[32m+[m[32m// backend/src/models/restaurant.ts[m
+ [m
+[32m+[m[32m// backend/src/models/restaurant.ts[m
+ [m
+[32m+[m[32mimport mongoose, { Schema, Document, Types } from "mongoose";[m
+ [m
+ // Define the MenuItem schema and type[m
+ const menuItemSchema = new Schema({[m
+[36m@@ -33,7 +35,7 @@[m [mconst branchInfoSchema = new Schema({[m
+   latitude: { type: Number, required: true },[m
+   longitude: { type: Number, required: true },[m
+   deliveryPrice: { type: Number, default: 0 }, // in cents[m
+[31m-  deliveryTime: { type: Number, default: 0 },  // in minutes or days, depending on business type[m
+[32m+[m[32m  deliveryTime: { type: Number, default: 0 }, // in minutes or days, depending on business type[m
+ });[m
+ [m
+ export type BranchInfoType = {[m
+[36m@@ -43,7 +45,7 @@[m [mexport type BranchInfoType = {[m
+   latitude: number;[m
+   longitude: number;[m
+   deliveryPrice: number; // in cents[m
+[31m-  deliveryTime: number;  // in minutes or days[m
+[32m+[m[32m  deliveryTime: number; // in minutes or days[m
+ };[m
+ [m
+ // Define the Restaurant interface[m
+[36m@@ -66,7 +68,7 @@[m [minterface IRestaurant extends Document {[m
+ }[m
+ [m
+ // Define the Restaurant schema[m
+[31m-const RestaurantSchema = new Schema({[m
+[32m+[m[32mconst RestaurantSchema: Schema = new Schema({[m
+   restaurantName: { type: String, required: true },[m
+   branchesInfo: [branchInfoSchema],[m
+   country: { type: String, required: true },[m
+[1mdiff --git a/src/routes/MyRestaurantRoute.ts b/src/routes/MyRestaurantRoute.ts[m
+[1mindex 30779e9b..6fd83c7a 100644[m
+[1m--- a/src/routes/MyRestaurantRoute.ts[m
+[1m+++ b/src/routes/MyRestaurantRoute.ts[m
+[36m@@ -1,11 +1,20 @@[m
+ //  C:\Users\gertf\Desktop\FoodApp\backend\src\routes\MyRestaurantRoute.ts[m
+ [m
+[32m+[m[32m// backend/src/routes/MyRestaurantRoute.ts[m
+[32m+[m
+[32m+[m[32m// backend/src/routes/MyRestaurantRoute.ts[m
+[32m+[m
+ import express from "express";[m
+ import multer from "multer";[m
+[31m-import { getMyRestaurant, createMyRestaurant, updateMyRestaurant } from "../controllers/MyRestaurantController";[m
+[32m+[m[32mimport {[m
+[32m+[m[32m  getMyRestaurant,[m
+[32m+[m[32m  createMyRestaurant,[m
+[32m+[m[32m  updateMyRestaurant,[m
+[32m+[m[32m  updateRestaurantOrderStatus,[m
+[32m+[m[32m  getMyRestaurantOrders,[m
+[32m+[m[32m} from "../controllers/MyRestaurantController";[m
+ import { jwtCheck, jwtParse } from "../middleware/auth";[m
+ import { validateMyRestaurantRequest } from "../middleware/validation";[m
+[31m-import  MyRestaurantController from "../controllers/MyRestaurantController";[m
+ [m
+ const router = express.Router();[m
+ [m
+[36m@@ -17,37 +26,20 @@[m [mconst upload = multer({[m
+   },[m
+ });[m
+ [m
+[31m-router.get([m
+[31m-  "/order",[m
+[31m-  jwtCheck,[m
+[31m-  jwtParse,[m
+[31m-  MyRestaurantController.getMyRestaurantOrders[m
+[31m-);[m
+[31m-[m
+[31m-router.patch([m
+[31m-  "/order/:orderId/status",[m
+[31m-  jwtCheck,[m
+[31m-  jwtParse,[m
+[31m-  MyRestaurantController.updateRestaurantOrderStatus[m
+[31m-);[m
+[31m-[m
+[31m-[m
+[31m-[m
+[32m+[m[32m// Define menuItemsFields with the correct field names using dot notation[m
+ const menuItemsFields = Array.from({ length: 40 }, (_, i) => ({[m
+[31m-  name: `menuItems[${i}].menuItemImageFile`,[m
+[32m+[m[32m  name: `menuItems[${i}].menuItemImageFile`, // Matches frontend with dot notation[m
+   maxCount: 1,[m
+ }));[m
+ [m
+[32m+[m[32m// Define the fields Multer should handle[m
+ const restaurantUpload = upload.fields([[m
+[31m-  { name: "restaurantImageFile", maxCount: 1 },[m
+[32m+[m[32m  { name: "restaurantImageFile", maxCount: 1 }, // Matches frontend[m
+   ...menuItemsFields,[m
+ ]);[m
+ [m
+[31m-// GET restaurant for logged-in user actually no validation needed but works with jwt & parse, [m
+[31m-router.get("/",[m
+[31m-   jwtCheck,[m
+[31m-    jwtParse,[m
+[31m-    getMyRestaurant);[m
+[32m+[m[32m// GET restaurant for logged-in user[m
+[32m+[m[32mrouter.get("/", jwtCheck, jwtParse, getMyRestaurant);[m
+ [m
+ // POST (create) a new restaurant[m
+ router.post([m
+[36m@@ -69,5 +61,20 @@[m [mrouter.put([m
+   updateMyRestaurant[m
+ );[m
+ [m
+[31m-export default router;[m
+[32m+[m[32m// PATCH (update order status)[m
+[32m+[m[32mrouter.patch([m
+[32m+[m[32m  "/order/:id/status",[m
+[32m+[m[32m  jwtCheck,[m
+[32m+[m[32m  jwtParse,[m
+[32m+[m[32m  updateRestaurantOrderStatus[m
+[32m+[m[32m);[m
+ [m
+[32m+[m[32m// GET (fetch orders)[m
+[32m+[m[32mrouter.get([m
+[32m+[m[32m  "/order",[m
+[32m+[m[32m  jwtCheck,[m
+[32m+[m[32m  jwtParse,[m
+[32m+[m[32m  getMyRestaurantOrders[m
+[32m+[m[32m);[m
+[32m+[m
+[32m+[m[32mexport default router;[m
