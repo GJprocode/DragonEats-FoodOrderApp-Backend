@@ -5,7 +5,7 @@
     "outDir": "./dist",                   // Output directory for compiled files
     "rootDir": "./src",                   // Root directory of input files
     "typeRoots": ["./node_modules/@types", "./src/types"], // Custom and default type definitions
-    "types": ["node", "express", "multer", "cloudinary", "stripe"], // Include specific type definitions
+    "types": ["node", "express", "multer"], // Include only valid type definitions
     "target": "ES2020",                   // Modern JavaScript target for compatibility
     "module": "commonjs",                 // CommonJS module system
     "moduleResolution": "node",          // Resolve modules using Node.js style
