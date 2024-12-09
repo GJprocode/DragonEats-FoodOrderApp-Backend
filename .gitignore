@@ -9,11 +9,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+node_modules/
 dist
 !dist/google0c43e2dd203680d9.html
 dist-ssr
 *.local
+node_modules/
+
 
 # Editor directories and files
 .vscode/*
