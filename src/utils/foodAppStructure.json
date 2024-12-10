@@ -6,6 +6,8 @@
   "backend": {
     ".env": "file",
     ".gitignore": "file",
+    "backend_diff.txt": "file",
+    "diff_excluding_node_modules.txt": "file",
     "eslint.config.mjs": "file",
     "package-lock.json": "file",
     "package.json": "file",
@@ -13,6 +15,7 @@
     "src": {
       "controllers": {
         "AdminActionsController.ts": "file",
+        "BranchDeliveryController.ts": "file",
         "MyRestaurantController.ts": "file",
         "MyUserController.ts": "file",
         "OrderController.ts": "file",
@@ -47,7 +50,11 @@
       },
       "utils": {
         "cloudinaryMongoDBImageClean.ts": "file",
+        "commitdiff.ts": "file",
+        "deliveryPricing.ts": "file",
+        "deliveryUtils.ts": "file",
         "foodAppStructure.json": "file",
+        "gitcodes.ts": "file",
         "imageModerator.ts": "file",
         "printStructure.ts": "file",
         "textFilter.ts": "file",
@@ -64,6 +71,7 @@
     "components.json": "file",
     "eslint.config.js": "file",
     "eslint.config.mjs": "file",
+    "frontend_diff.txt": "file",
     "index.html": "file",
     "manifest.json": "file",
     "package-lock.json": "file",
@@ -180,8 +188,6 @@
         "layout.tsx": "file"
       },
       "lib": {
-        "deliveryPricing.ts": "file",
-        "deliveryUtils.ts": "file",
         "PriceFormatter.ts": "file",
         "utils.ts": "file"
       },
