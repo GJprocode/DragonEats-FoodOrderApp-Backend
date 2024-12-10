@@ -1,8 +1,6 @@
 //  C:\Users\gertf\Desktop\FoodApp\backend\src\routes\MyRestaurantRoute.ts
 
-// backend/src/routes/MyRestaurantRoute.ts
 
-// backend/src/routes/MyRestaurantRoute.ts
 
 import express from "express";
 import multer from "multer";
@@ -63,11 +61,12 @@ router.put(
 
 // PATCH (update order status)
 router.patch(
-  "/order/:id/status",
+  "/order/:orderId/status",
   jwtCheck,
   jwtParse,
   updateRestaurantOrderStatus
 );
+
 
 // GET (fetch orders)
 router.get(

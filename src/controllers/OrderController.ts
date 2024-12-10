@@ -17,12 +17,18 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
   const { status } = req.body;
 
   try {
+    console.log(`Received request to update order ${orderId} status to ${status} by user ${req.userId}`);
+
     const order = await Order.findById(orderId).populate("user").populate("restaurant");
     if (!order) {
+      console.error(`Order ${orderId} not found`);
       return res.status(404).json({ message: "Order not found" });
     }
 
+    console.log(`Fetched order: ${JSON.stringify(order, null, 2)}`);
+
     if (order.user._id.toString() !== req.userId) {
+      console.warn(`Unauthorized access: User ${req.userId} is not authorized to update order ${orderId}`);
       return res.status(403).json({ message: "Unauthorized to update this order" });
     }
 
@@ -43,7 +49,10 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
     const orderStatus = order.status as keyof typeof validTransitions;
 
     if (!validTransitions[orderStatus]?.includes(status)) {
-      return res.status(400).json({ message: `Invalid transition from ${order.status} to ${status}` });
+      console.error(`Invalid status transition from ${order.status} to ${status}`);
+      return res
+        .status(400)
+        .json({ message: `Invalid transition from ${order.status} to ${status}` });
     }
 
     if (status === "rejected") {
@@ -51,13 +60,13 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
         message: req.body.message || "Order rejected by user",
         timestamp: new Date(),
       };
+      console.log(`Added rejection message: ${JSON.stringify(order.rejectionMessage)}`);
     }
 
     order.status = status;
     console.log(`Updating order ${orderId} status from ${order.status} to ${status}`);
     await order.save();
-    console.log(`Order status updated: ${order.status}`);
-
+    console.log(`Order ${orderId} status updated successfully to ${status}`);
 
     res.status(200).json(order);
   } catch (error) {
@@ -65,6 +74,7 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to update user order status" });
   }
 };
+
 
 export const updateOrderStatusFromStripe = async (req: Request, res: Response) => {
   const { orderId } = req.params;

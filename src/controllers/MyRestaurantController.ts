@@ -8,7 +8,7 @@ import cloudinary from "cloudinary";
 import Order from "../models/order";
 
 // Function to upload an image to Cloudinary
-const uploadImage = async (file: Express.Multer.File): Promise<string> => {
+export const uploadImage = async (file: Express.Multer.File): Promise<string> => {
   try {
     const base64Image = Buffer.from(file.buffer).toString("base64");
     const dataURI = `data:${file.mimetype};base64,${base64Image}`;
@@ -432,6 +432,7 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
 };
 
 export default {
+  uploadImage,
   getAllRestaurants,
   getMyRestaurant,
   createMyRestaurant,

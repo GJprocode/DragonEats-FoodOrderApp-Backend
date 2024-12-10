@@ -63,7 +63,7 @@ export const updateMyUser = async (req: Request, res: Response) => {
     }
 
     const { name, address, city, country, cellphone } = req.body;
-    const userLocation = req.session?.userLocation;
+    const userLocation = (req.session as any).userLocation;
 
     const updateData: any = {
       name,
@@ -90,36 +90,6 @@ export const updateMyUser = async (req: Request, res: Response) => {
   }
 };
 
-// export const promptForLocation = async (req: Request, res: Response) => {
-//   try {
-//     const { latitude, longitude } = req.body;
-
-//     if (typeof latitude !== "number" || typeof longitude !== "number") {
-//       return res.status(400).json({ message: "Invalid location data provided." });
-//     }
-
-//     const userId = req.userId;
-
-//     if (userId) {
-//       const user = await User.findByIdAndUpdate(
-//         userId,
-//         { userLocation: [latitude, longitude] },
-//         { new: true }
-//       );
-//       return res.status(200).json({ message: "Location updated successfully.", user });
-//     }
-
-//     if (!req.session) {
-//       return res.status(500).json({ message: "Session is not initialized." });
-//     }
-
-//     req.session.userLocation = [latitude, longitude];
-//     res.status(200).json({ message: "Location stored temporarily.", location: req.session.userLocation });
-//   } catch (error) {
-//     console.error("Error updating location:", error);
-//     res.status(500).json({ message: "Failed to handle location data" });
-//   }
-// };
 
 
 // Save or update location for a user
@@ -165,3 +135,17 @@ export const saveUserLocation = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to save location." });
   }
 };
+
+// Step 7: Rollback ts-node and Related Dependencies (Optional)
+// If none of the above resolves the issue, rollback your ts-node version:
+
+// Uninstall ts-node:
+
+// bash
+// Copy code
+// npm uninstall ts-node
+// Install a specific working version:
+
+// bash
+// Copy code
+// npm install ts-node@latest @types/node@latest --save-dev

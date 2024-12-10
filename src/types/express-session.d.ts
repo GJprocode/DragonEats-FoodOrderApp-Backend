@@ -1,3 +1,5 @@
+// C:\Users\gertf\Desktop\FoodApp\backend\src\types\express.d.ts
+
 import "express-session";
 
 declare module "express-session" {
@@ -15,3 +17,4 @@ declare global {
     }
   }
 }
+
