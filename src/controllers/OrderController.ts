@@ -17,12 +17,18 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
   const { status } = req.body;
 
   try {
+    console.log(`Received request to update order ${orderId} status to ${status} by user ${req.userId}`);
+
     const order = await Order.findById(orderId).populate("user").populate("restaurant");
     if (!order) {
+      console.error(`Order ${orderId} not found`);
       return res.status(404).json({ message: "Order not found" });
     }
 
+    console.log(`Fetched order: ${JSON.stringify(order, null, 2)}`);
+
     if (order.user._id.toString() !== req.userId) {
+      console.warn(`Unauthorized access: User ${req.userId} is not authorized to update order ${orderId}`);
       return res.status(403).json({ message: "Unauthorized to update this order" });
     }
 
@@ -43,7 +49,10 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
     const orderStatus = order.status as keyof typeof validTransitions;
 
     if (!validTransitions[orderStatus]?.includes(status)) {
-      return res.status(400).json({ message: `Invalid transition from ${order.status} to ${status}` });
+      console.error(`Invalid status transition from ${order.status} to ${status}`);
+      return res
+        .status(400)
+        .json({ message: `Invalid transition from ${order.status} to ${status}` });
     }
 
     if (status === "rejected") {
@@ -51,10 +60,13 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
         message: req.body.message || "Order rejected by user",
         timestamp: new Date(),
       };
+      console.log(`Added rejection message: ${JSON.stringify(order.rejectionMessage)}`);
     }
 
     order.status = status;
+    console.log(`Updating order ${orderId} status from ${order.status} to ${status}`);
     await order.save();
+    console.log(`Order ${orderId} status updated successfully to ${status}`);
 
     res.status(200).json(order);
   } catch (error) {
@@ -62,6 +74,7 @@ export const updateUserOrderStatus = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to update user order status" });
   }
 };
+
 
 export const updateOrderStatusFromStripe = async (req: Request, res: Response) => {
   const { orderId } = req.params;
@@ -155,6 +168,17 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       });
     }
 
+    // Convert cart items prices and deliveryPrice to cents
+    const itemsTotalCents = cartItems.reduce(
+      (total: number, item: { price: number; quantity: number }) => total + Math.round(item.price) * item.quantity,
+      0
+    );
+
+    // Use branchDetails to get deliveryPrice (in dollars), convert to cents
+    const deliveryPriceCents = branchDetails && typeof branchDetails.deliveryPrice === "number"
+      ? Math.round(branchDetails.deliveryPrice)
+      : 0;
+
     if (!existingOrder) {
       existingOrder = new Order({
         restaurant: restaurant._id,
@@ -164,20 +188,14 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         status: "placed",
         deliveryDetails,
         cartItems,
-        totalAmount: 0,
+        totalAmount: 0, // will set below
       });
     }
 
-    const itemsTotal = cartItems.reduce(
-      (total: number, item: { price: number; quantity: number }) => total + item.price * item.quantity,
-      0
-    );
-
-    existingOrder.totalAmount = itemsTotal + restaurant.deliveryPrice;
-
+    existingOrder.totalAmount = itemsTotalCents + deliveryPriceCents;
     await existingOrder.save();
 
-    const lineItems = cartItems.map((item: { name: any; price: number; quantity: any; }) => ({
+    const lineItems = cartItems.map((item: { name: string; price: number; quantity: number }) => ({
       price_data: {
         currency: "usd",
         product_data: { name: item.name },
@@ -190,7 +208,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       price_data: {
         currency: "usd",
         product_data: { name: "Delivery Fee" },
-        unit_amount: Math.round(restaurant.deliveryPrice),
+        unit_amount: deliveryPriceCents,
       },
       quantity: 1,
     });
@@ -234,7 +252,8 @@ export const getRestaurantOrders = async (req: Request, res: Response) => {
     console.error("Error fetching restaurant orders:", error);
     res.status(500).json({ message: "Something went wrong" });
   }
-}
+};
+
 export default {
   updateUserOrderStatus,
   getMyOrders,

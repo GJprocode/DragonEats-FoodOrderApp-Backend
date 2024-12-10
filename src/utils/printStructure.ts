@@ -46,4 +46,5 @@ console.log(`Directory structure saved to ${jsonFilePath}`);
 
 // cd C:\Users\gertf\Desktop\FoodApp\backend
 // tsx src/utils/printStructure.ts
+// ddasdadad
 

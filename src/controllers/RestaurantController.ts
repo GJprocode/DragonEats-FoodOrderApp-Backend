@@ -101,23 +101,27 @@ export const searchRestaurant = async (req: Request, res: Response) => {
 // Function to get all distinct cities that have approved restaurants
 export const getCities = async (req: Request, res: Response) => {
   try {
+    // Aggregate cities from approved restaurants' branches
     const cities = await Restaurant.aggregate([
-      { $match: { status: "approved" } },
-      { $unwind: "$branchesInfo" },
-      { $group: { _id: "$branchesInfo.cities" } },
-      { $project: { city: "$_id" } },
+      { $match: { status: "approved" } }, // Only include approved restaurants
+      { $unwind: "$branchesInfo" }, // Unwind branchesInfo array to treat each branch separately
+      { $group: { _id: "$branchesInfo.cities" } }, // Group by the cities from branchesInfo
+      { $project: { city: "$_id" } }, // Project the city field from the grouped result
     ]);
 
+    // Map and sort the cities alphabetically
     const distinctCities = cities
-      .map((city: { city: string }) => city.city)
-      .sort((a, b) => a.localeCompare(b)); // Alphabetical sorting
+      .map((city: { city: string }) => city.city) // Extract city names
+      .sort((a, b) => a.localeCompare(b)); // Sort cities alphabetically
 
+    // Return the list of distinct cities
     res.json(distinctCities);
   } catch (error) {
     console.error("Error fetching cities:", error);
     res.status(500).json({ message: "Error fetching approved cities" });
   }
 };
+
 
 
 const getRestaurant = async (req: Request, res: Response) => {

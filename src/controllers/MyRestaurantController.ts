@@ -1,22 +1,21 @@
-// C:\Users\gertf\Desktop\FoodApp\backend\src\controllers\MyRestaurantController.ts
+// backend/src/controllers/MyRestaurantController.ts
 
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 import mongoose from "mongoose";
 import User from "../models/user";
-import { checkImageForInappropriateContent } from "../utils/imageModerator";
 import cloudinary from "cloudinary";
 import Order from "../models/order";
 
 // Function to upload an image to Cloudinary
-const uploadImage = async (file: Express.Multer.File): Promise<string> => {
+export const uploadImage = async (file: Express.Multer.File): Promise<string> => {
   try {
     const base64Image = Buffer.from(file.buffer).toString("base64");
     const dataURI = `data:${file.mimetype};base64,${base64Image}`;
     const uploadResponse = await cloudinary.v2.uploader.upload(dataURI, {
-      secure: true // Ensure HTTPS is used for the returned URL
+      secure: true,
     });
-    return uploadResponse.secure_url;//// Use the HTTPS secure_url
+    return uploadResponse.secure_url;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error uploading image:", error.message);
@@ -27,7 +26,6 @@ const uploadImage = async (file: Express.Multer.File): Promise<string> => {
   }
 };
 
-// Fetch all restaurants
 export const getAllRestaurants = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurants = await Restaurant.find().exec();
@@ -43,21 +41,18 @@ export const getAllRestaurants = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Fetch a specific restaurant for the logged-in user
-// Controller to fetch or create restaurant
-// Get logged-in user's restaurant
 export const getMyRestaurant = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId; // Assuming userId is added via middleware
+    const userId = req.userId;
     if (!userId) {
+      console.log("No userId provided");
       return res.status(400).json({ message: "User ID not provided" });
     }
 
-    // Find the restaurant linked to the user
     let restaurant = await Restaurant.findOne({ user: userId });
 
-    // If no restaurant exists, create a new one with default values
     if (!restaurant) {
+      console.log("No restaurant found for user:", userId, "Creating a new one.");
       restaurant = new Restaurant({
         user: new mongoose.Types.ObjectId(userId),
         restaurantName: "New Restaurant",
@@ -67,13 +62,13 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
             branchName: "Default Branch",
             latitude: 0.0,
             longitude: 0.0,
+            deliveryPrice: 0,
+            deliveryTime: 0,
           },
         ],
         country: "Default Country",
-        deliveryPrice: 2000, // Default as cents ($20.00)
-        estimatedDeliveryTime: 0,
         cuisines: [],
-        menuItems: [], // Ensure empty menuItems array is created
+        menuItems: [],
         restaurantImageUrl: "",
         status: "submitted",
       });
@@ -81,54 +76,124 @@ export const getMyRestaurant = async (req: Request, res: Response) => {
       await restaurant.save();
     }
 
-    // Format `menuItems` properly
+    // Convert the entire restaurant document to a plain object once
+    const restaurantObj = restaurant.toObject();
+
     const formattedRestaurant = {
-      ...restaurant.toObject(),
-      deliveryPrice: restaurant.deliveryPrice / 100, // Convert delivery price to dollars
-      menuItems: restaurant.menuItems.map((menuItem) => ({
+      ...restaurantObj,
+      branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
+        ...branch,
+        deliveryPrice: branch.deliveryPrice != null ? branch.deliveryPrice / 100 : 0,
+        deliveryTime: branch.deliveryTime != null ? branch.deliveryTime : 0,
+      })),
+      menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
         ...menuItem,
-        name: menuItem.name || "Unnamed Item", // Fallback for missing names
-        price: menuItem.price / 100, // Convert menu item prices to dollars
-        imageUrl: menuItem.imageUrl || "/path/to/placeholder-image.jpg", // Fallback for missing image URLs
+        name: menuItem.name || "Unnamed Item",
+        price: menuItem.price / 100,
+        imageUrl: menuItem.imageUrl || "/path/to/placeholder-image.jpg",
       })),
     };
 
-    res.json(formattedRestaurant);
+    // Convert to pure JSON object
+    const finalRestaurant = JSON.parse(JSON.stringify(formattedRestaurant));
+
+    res.json(finalRestaurant);
   } catch (error) {
     console.error("Error fetching restaurant:", error);
     res.status(500).json({ message: "Error fetching restaurant" });
   }
 };
 
-
-
-
-
-
-
-
-// Create a new restaurant for the logged-in user
 export const createMyRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
+    const existingRestaurant = await Restaurant.findOne({ user: req.userId }).exec();
+    if (existingRestaurant) {
+      res.status(409).json({ message: "User restaurant already exists" });
+      return;
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    // Convert wholesale to boolean
+    const wholesale = req.body.wholesale === "true";
+
     const restaurant = new Restaurant({
-      ...req.body,
-      deliveryPrice: Math.round(req.body.deliveryPrice * 100), // Convert to cents
+      restaurantName: req.body.restaurantName,
+      cellphone: req.body.cellphone,
       branchesInfo: req.body.branchesInfo.map((branch: any) => ({
         cities: branch.cities,
         branchName: branch.branchName,
         latitude: branch.latitude,
         longitude: branch.longitude,
+        deliveryPrice: Math.round(branch.deliveryPrice * 100), // Convert to cents
+        deliveryTime: branch.deliveryTime,
+      })),
+      country: req.body.country,
+      wholesale: wholesale, // Saved as boolean
+      cuisines: req.body.cuisines,
+      menuItems: req.body.menuItems.map((item: any) => ({
+        name: item.name,
+        price: Math.round(item.price * 100), // Convert to cents
+        imageUrl: item.imageUrl || "",
       })),
       user: new mongoose.Types.ObjectId(req.userId),
-      email: req.userEmail || "",
+      email: user.email || "",
+      status: "submitted",
       lastUpdated: new Date(),
     });
 
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    // Handle restaurant image
+    if (files?.restaurantImageFile && files.restaurantImageFile.length > 0) {
+      const file = files.restaurantImageFile[0];
+      const imageUrl = await uploadImage(file);
+      restaurant.restaurantImageUrl = imageUrl;
+    }
+
+    // Handle menu item images
+    if (files) {
+      for (let i = 0; i < req.body.menuItems.length; i++) {
+        const field = `menuItems[${i}].menuItemImageFile`; // Use dot notation
+        if (files[field] && files[field].length > 0) {
+          const file = files[field][0];
+          const imageUrl = await uploadImage(file);
+          restaurant.menuItems[i].imageUrl = imageUrl;
+        }
+      }
+    }
+
     await restaurant.save();
-    res.status(201).json(restaurant);
-  } catch (error) {
-    console.error("Error creating restaurant:", error);
-    res.status(500).json({ message: "Error creating restaurant" });
+
+    // Prepare response
+    const restaurantObj = restaurant.toObject();
+    const formattedResponse = {
+      ...restaurantObj,
+      branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
+        ...branch,
+        deliveryPrice: branch.deliveryPrice / 100,
+        deliveryTime: branch.deliveryTime,
+      })),
+      menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
+        ...menuItem,
+        price: menuItem.price / 100,
+      })),
+    };
+
+    const finalResponse = JSON.parse(JSON.stringify(formattedResponse));
+    res.status(201).json(finalResponse);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error creating restaurant:", error.message);
+      res.status(500).json({ message: "Error creating restaurant", error: error.message });
+    } else {
+      console.error("Unexpected error creating restaurant:", error);
+      res.status(500).json({ message: "Unexpected error creating restaurant" });
+    }
   }
 };
 
@@ -136,33 +201,112 @@ export const updateMyRestaurant = async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne({ user: req.userId });
     if (!restaurant) {
+      console.log("No restaurant found for user:", req.userId);
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    // Update the delivery price and other fields
-    restaurant.deliveryPrice = Math.round(req.body.deliveryPrice * 100); // Convert to cents
-    restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
-    restaurant.restaurantName = req.body.restaurantName;
-    restaurant.country = req.body.country;
-    restaurant.cuisines = req.body.cuisines;
-    restaurant.wholesale = req.body.wholesale;
-    restaurant.cellphone = req.body.cellphone;
+    // Convert wholesale to boolean if provided
+    if (req.body.wholesale !== undefined) {
+      restaurant.wholesale = req.body.wholesale === "true";
+    }
 
+    // Update basic fields
+    restaurant.restaurantName = req.body.restaurantName || restaurant.restaurantName;
+    restaurant.cellphone = req.body.cellphone || restaurant.cellphone;
+    restaurant.country = req.body.country || restaurant.country;
+    restaurant.cuisines = Array.isArray(req.body.cuisines) ? req.body.cuisines : restaurant.cuisines;
+
+    // Update branchesInfo
+    if (Array.isArray(req.body.branchesInfo)) {
+      restaurant.branchesInfo = req.body.branchesInfo.map((branch: any, index: number) => ({
+        _id: branch._id || (restaurant.branchesInfo[index]?._id || new mongoose.Types.ObjectId()),
+        cities: branch.cities || restaurant.branchesInfo[index]?.cities || "Default City",
+        branchName:
+          branch.branchName || restaurant.branchesInfo[index]?.branchName || `Branch ${index + 1}`,
+        latitude:
+          typeof branch.latitude === "number"
+            ? branch.latitude
+            : restaurant.branchesInfo[index]?.latitude || 0,
+        longitude:
+          typeof branch.longitude === "number"
+            ? branch.longitude
+            : restaurant.branchesInfo[index]?.longitude || 0,
+        deliveryPrice:
+          branch.deliveryPrice != null
+            ? Math.round(branch.deliveryPrice * 100)
+            : restaurant.branchesInfo[index]?.deliveryPrice || 0,
+        deliveryTime:
+          branch.deliveryTime != null ? branch.deliveryTime : restaurant.branchesInfo[index]?.deliveryTime || 0,
+      }));
+    }
+
+    // Update menuItems
+    if (Array.isArray(req.body.menuItems)) {
+      restaurant.menuItems = req.body.menuItems.map((menuItem: any, index: number) => ({
+        _id: menuItem._id || (restaurant.menuItems[index]?._id || new mongoose.Types.ObjectId()),
+        name: menuItem.name || restaurant.menuItems[index]?.name || "Unnamed Item",
+        price:
+          menuItem.price != null ? Math.round(menuItem.price * 100) : restaurant.menuItems[index]?.price || 0,
+        imageUrl:
+          menuItem.imageUrl ||
+          restaurant.menuItems[index]?.imageUrl ||
+          "/path/to/placeholder-image.jpg",
+      }));
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    // Handle restaurant image update
+    if (files?.restaurantImageFile && files.restaurantImageFile.length > 0) {
+      const file = files.restaurantImageFile[0];
+      const imageUrl = await uploadImage(file);
+      restaurant.restaurantImageUrl = imageUrl;
+    }
+
+    // Handle menu item images update
+    if (files) {
+      for (let i = 0; i < req.body.menuItems.length; i++) {
+        const field = `menuItems[${i}].menuItemImageFile`; // Use dot notation
+        if (files[field] && files[field].length > 0) {
+          const file = files[field][0];
+          const imageUrl = await uploadImage(file);
+          restaurant.menuItems[i].imageUrl = imageUrl;
+        }
+      }
+    }
+
+    restaurant.lastUpdated = new Date();
     await restaurant.save();
-    res.status(200).json(restaurant);
-  } catch (error) {
-    console.error("Error updating restaurant:", error);
-    res.status(500).json({ message: "Error updating restaurant" });
+
+    // Prepare response
+    const restaurantObj = restaurant.toObject();
+    const formattedResponse = {
+      ...restaurantObj,
+      branchesInfo: restaurantObj.branchesInfo.map((branch: any) => ({
+        ...branch,
+        deliveryPrice: branch.deliveryPrice / 100,
+      })),
+      menuItems: restaurantObj.menuItems.map((menuItem: any) => ({
+        ...menuItem,
+        price: menuItem.price / 100,
+      })),
+    };
+
+    const finalResponse = JSON.parse(JSON.stringify(formattedResponse));
+    res.status(200).json(finalResponse);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error updating restaurant:", error.message);
+      res.status(500).json({ message: "Error updating restaurant", error: error.message });
+    } else {
+      console.error("Unexpected error updating restaurant:", error);
+      res.status(500).json({ message: "Unexpected error updating restaurant" });
+    }
   }
 };
 
+// Additional Controller Functions (unchanged)
 
-
-
-
-
-
-// Update restaurant status (for admin use)
 export const updateRestaurantStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurantId = req.params.id;
@@ -192,7 +336,7 @@ export const updateRestaurantStatus = async (req: Request, res: Response): Promi
   }
 };
 
-const getMyRestaurantOrders = async (req: Request, res: Response) => {
+export const getMyRestaurantOrders = async (req: Request, res: Response) => {
   try {
     const { status, date } = req.query;
     const restaurant = await Restaurant.findOne({ user: req.userId });
@@ -207,7 +351,7 @@ const getMyRestaurantOrders = async (req: Request, res: Response) => {
       query.status = status;
     }
 
-    // Filter by date if provided (using `createdAt` or `dateDelivered`)
+    // Filter by date if provided (using `dateDelivered`)
     if (date) {
       const dateObj = new Date(date as string);
       const nextDay = new Date(dateObj);
@@ -228,8 +372,6 @@ const getMyRestaurantOrders = async (req: Request, res: Response) => {
   }
 };
 
-
-// Update restaurant order status
 export const updateRestaurantOrderStatus = async (req: Request, res: Response) => {
   const { orderId } = req.params;
   const { status } = req.body;
@@ -245,7 +387,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       return res.status(403).json({ message: "Unauthorized to update this order" });
     }
 
-    // Define valid transitions
     const validTransitions: Record<string, string[]> = {
       placed: ["confirmed", "rejected"],
       confirmed: ["rejected"],
@@ -261,7 +402,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       return res.status(400).json({ message: `Invalid transition from ${order.status} to ${status}` });
     }
 
-    // Handle rejected messages
     if (status === "rejected") {
       order.rejectionMessage = {
         message: ["placed", "confirmed"].includes(order.status)
@@ -271,10 +411,8 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       };
     }
 
-    // Handle resolved messages
     if (status === "resolved") {
       const isBeforePay = order.rejectionMessage?.message === "Out of stock, dragons flying to get ingredients.";
-
       order.resolutionMessage = {
         message: isBeforePay
           ? "Order resolved before payment, no refund needed."
@@ -283,7 +421,6 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
       };
     }
 
-    // Update the status
     order.status = status;
     await order.save();
 
@@ -294,18 +431,13 @@ export const updateRestaurantOrderStatus = async (req: Request, res: Response) =
   }
 };
 
-
-
-
-
-
-
-
 export default {
-  updateRestaurantOrderStatus,
-  getMyRestaurantOrders,
+  uploadImage,
+  getAllRestaurants,
   getMyRestaurant,
   createMyRestaurant,
   updateMyRestaurant,
-  uploadImage,
+  updateRestaurantStatus,
+  getMyRestaurantOrders,
+  updateRestaurantOrderStatus,
 };

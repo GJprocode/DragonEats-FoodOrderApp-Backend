@@ -15,6 +15,7 @@ import orderUserRoute from "./routes/orderUserRoute";
 import OrderController from "./controllers/OrderController";
 import helmet from "helmet";
 
+
 const app = express();
 
 // Add global error handlers
@@ -67,6 +68,7 @@ app.use(
   })
 );
 
+
 // Define the webhook route before body parsers
 app.post(
   "/api/order/checkout/webhook",
@@ -90,9 +92,6 @@ app.use("/api/cities", cityRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/order", orderRoute);
 app.use("/api/order-user", orderUserRoute);
-
-
-
 
 app.use(
   helmet({

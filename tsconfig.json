@@ -4,7 +4,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node"],
+    "types": ["node", "express", "express-session"],
    
 
     /* Language and Environment */
@@ -22,8 +22,12 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "types/**/*.d.ts"
+    "src/**/*.ts",                        // Include all TypeScript files in `src`
+    "src/**/*.d.ts",                      // Include all declaration files in `src`
+    "types/**/*.d.ts"                     // Include all declaration files in `types`
+  ],
+  "exclude": [
+    "node_modules",                       // Exclude `node_modules` directory
+    "dist"                                // Exclude the output directory
   ]
 }
