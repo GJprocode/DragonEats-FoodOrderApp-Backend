@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/user";
+import { Session } from "express-session";
 
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
@@ -63,7 +64,10 @@ export const updateMyUser = async (req: Request, res: Response) => {
     }
 
     const { name, address, city, country, cellphone } = req.body;
-    const userLocation = (req.session as any).userLocation;
+
+    // Access `userLocation` safely
+    const userLocation = (req.session as Session & { userLocation?: { latitude: number; longitude: number } }).userLocation;
+
 
     const updateData: any = {
       name,
@@ -92,6 +96,7 @@ export const updateMyUser = async (req: Request, res: Response) => {
 
 
 
+
 // Save or update location for a user
 export const saveUserLocation = async (req: Request, res: Response) => {
   try {
@@ -106,12 +111,15 @@ export const saveUserLocation = async (req: Request, res: Response) => {
       return res.status(500).json({ message: "Session is not initialized." });
     }
 
+    // Cast req.session to include custom properties
+    const session = req.session as Session & { userLocation?: { latitude: number; longitude: number } };
+
     // Save location in session for non-logged-in users
     if (!req.userId) {
-      req.session.userLocation = { latitude, longitude };
+      session.userLocation = { latitude, longitude };
       return res.status(200).json({
         message: "Location saved to session.",
-        location: req.session.userLocation,
+        location: session.userLocation,
       });
     }
 
@@ -135,6 +143,7 @@ export const saveUserLocation = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to save location." });
   }
 };
+
 
 // Step 7: Rollback ts-node and Related Dependencies (Optional)
 // If none of the above resolves the issue, rollback your ts-node version:
