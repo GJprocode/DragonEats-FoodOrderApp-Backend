@@ -14,6 +14,8 @@ import orderRoute from "./routes/OrderRoute";
 import orderUserRoute from "./routes/orderUserRoute";
 import OrderController from "./controllers/OrderController";
 import helmet from "helmet";
+import MongoStore from "connect-mongo";
+
 
 
 const app = express();
@@ -61,6 +63,9 @@ app.use(
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: true,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_CONNECTION_STRING,
+    }),
     cookie: {
       secure: process.env.NODE_ENV === "production",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
